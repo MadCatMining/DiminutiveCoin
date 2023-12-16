@@ -1051,6 +1051,7 @@ void BuildConfigFile()
     fprintf(ConfFile, "server=1\n");
     fprintf(ConfFile, "deminodes=1\n");
     fprintf(ConfFile, "demimaxdepth=200\n");
+    fprintf(ConfFile, "demireorgtype=1\n");
     fprintf(ConfFile, "maxconnections=500\n");
     fprintf(ConfFile, "rpcuser=yourusername\n");
 
@@ -1064,9 +1065,10 @@ void BuildConfigFile()
     fprintf(ConfFile, "rpcpassword=%s\n", str.c_str());
     fprintf(ConfFile, "port=49139\n");
     fprintf(ConfFile, "rpcport=49122\n");
-    fprintf(ConfFile, "rpcconnect=127.0.0.1\n");
     fprintf(ConfFile, "rpcallowip=127.0.0.1\n");
-    fprintf(ConfFile, "addnode=127.0.0.1:49139\n");
+    fprintf(ConfFile, "addnode=75.119.140.224:49139\n");
+    fprintf(ConfFile, "addnode=75.119.140.225:49139\n");
+    fprintf(ConfFile, "addnode=78.57.248.53:49139\n");
     fclose(ConfFile);
 }
 
