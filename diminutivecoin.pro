@@ -1,6 +1,6 @@
 TEMPLATE = app
 TARGET = DiminutiveCoin-qt
-VERSION = 1.0.1.2
+VERSION = 1.0.1.3
 INCLUDEPATH += src src/json src/qt
 QT += core gui network
 DEFINES += ENABLE_WALLET

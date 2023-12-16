@@ -61,13 +61,15 @@ static const int MAX_BLOCKS_IN_TRANSIT_PER_PEER = 128;
 /** Timeout in seconds before considering a block download peer unresponsive. */
 static const unsigned int BLOCK_DOWNLOAD_TIMEOUT = 60;
 /** Maximum block reorganize depth (consider else an invalid fork) */
-static const int BLOCK_REORG_MAX_DEPTH = 1;
+static const int BLOCK_REORG_MAX_DEPTH = 5;
 /** Maximum block reorganize depth override (enabled using demi-nodes) */
 static int BLOCK_REORG_OVERRIDE_DEPTH = 0;
 /** Combined Maximum block reorganize depth (consider else an invalid fork) */
 static int BLOCK_REORG_THRESHOLD = BLOCK_REORG_MAX_DEPTH + BLOCK_REORG_OVERRIDE_DEPTH;
 /** Depth for rolling checkpoing block */
 static const int BLOCK_TEMP_CHECKPOINT_DEPTH = 120;
+/** Allow/Deny reorganize requests from peers as well as Demi-nodes */
+static int PEER_REORG_TYPE = 0;
 /** FutureDrift parameters */ // inline int64_t FutureDrift(int64_t nTime) { return nTime + 30 * 60; }
 inline int64_t TimeDrift() { return 30 * 60; } // Default time drift window
 inline int64_t FutureDriftV1(int64_t nTime) { return nTime + TimeDrift(); } // Initial future drift | Protocol-v2
