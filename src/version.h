@@ -30,13 +30,13 @@ static const int DATABASE_VERSION = 70001;
 // network protocol versioning
 //
 
-static const int PROTOCOL_VERSION = 60008;
+static const int PROTOCOL_VERSION = 60009;
 
 // intial proto version, to be increased after version/verack negotiation
 static const int INIT_PROTO_VERSION = 100;
 
 // disconnect from peers older than this proto version
-static const int MIN_PEER_PROTO_VERSION = 60007;
+static const int MIN_PEER_PROTO_VERSION = 60008;
 
 // nTime field added to CAddress, starting with this version;
 // if possible, avoid requesting addresses nodes older than this
@@ -61,7 +61,7 @@ static const int BIP0031_VERSION = 60000;
 static const int MEMPOOL_GD_VERSION = 60000;
 
 // "demi-nodes" command, enhanced "getdata" behavior starts with this version:
-static const int DEMINODE_VERSION = 60007;
+static const int DEMINODE_VERSION = 60009;
 
 // reject blocks with non-canonical signatures starting from this version
 static const int CANONICAL_BLOCK_SIG_VERSION = 60000;
