@@ -3,7 +3,7 @@
 # https://github.com/MadCatMining/DiminutiveCoin
 # By MadCatMining
 name: diminutivecoin
-version: '1.0.1.2'
+version: '1.0.1.4'
 summary: DiminutiveCoin
 description: | 
   An open source hybrid cryptocurrency called DiminutiveCoin, which features Staking, Mining, Multisig, and much more!
