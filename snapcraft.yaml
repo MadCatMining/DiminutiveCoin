@@ -78,7 +78,7 @@ parts:
       - autoconf
       - automake
       - pkg-config
-      - libpng12-dev
+      - libpng-dev
     override-build: |
       echo "Compile QR-encode v4.1.1"
       sudo ./config --prefix=/usr/local/qrencode
