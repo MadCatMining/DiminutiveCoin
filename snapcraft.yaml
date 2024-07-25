@@ -286,8 +286,8 @@ parts:
             BDB_LIB_PATH=/usr/local/lib \
             QRCODE_INCLUDE_PATH=/usr/local/qrencode/include \
             QRCODE_LIB_PATH=/usr/local/qrencode/lib \
-            MINIUPNPC_LIB_PATH=/usr/local/miniupnpc/lib \
-            MINIUPNPC_INCLUDE_PATH=/usr/local/miniupnpc/include \
+            MINIUPNPC_LIB_PATH=/usr/lib \
+            MINIUPNPC_INCLUDE_PATH=/usr/include \
             diminutivecoin.pro
       make -f Makefile clean
       make -f Makefile -j6
