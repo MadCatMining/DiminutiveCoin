@@ -82,7 +82,7 @@ parts:
     override-build: |
       echo "Compile QR-encode v4.1.1"
       sudo ./autogen.sh
-      sudo ./configure --prefix=/usr/local/qrencode
+      sudo ./configure --prefix=/usr/local/qrencode --disable-shared
       sudo make
       sudo make install
       sudo ldconfig
@@ -99,7 +99,7 @@ parts:
       - pkg-config
     override-build: |
       echo "Compile MiniuPnPc v2.1.20201016"
-      sudo make MINIUPNP_STATICLIB INSTALLPREFIX=/usr/local/miniupnpc
+      sudo make init upnpc-static INSTALLPREFIX=/usr/local/miniupnpc
       sudo make install
       sudo ldconfig
   4boost:
