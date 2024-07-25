@@ -99,7 +99,7 @@ parts:
       - pkg-config
     override-build: |
       echo "Compile MiniuPnPc v2.1.20201016"
-      sudo make init upnpc-static INSTALLPREFIX=/usr/local/miniupnpc
+      sudo make upnpc-static INSTALLPREFIX=/usr/local/miniupnpc
       sudo make install
       sudo ldconfig
   4boost:
