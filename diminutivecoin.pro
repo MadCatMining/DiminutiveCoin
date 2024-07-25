@@ -122,9 +122,9 @@ contains(USE_UPNP, -) {
     count(USE_UPNP, 0) {
         USE_UPNP=1
     }
-    # For builds with uPnP starting from v2 - remove "STATICLIB" from the line below
+    # For builds with uPnP starting from v2 - "STATICLIB" is removed from the line below
     # Otherwise build will fail due to changes in UPNP code.
-    DEFINES += USE_UPNP=$$USE_UPNP STATICLIB MINIUPNP_STATICLIB
+    DEFINES += USE_UPNP=$$USE_UPNP MINIUPNP_STATICLIB
     INCLUDEPATH += $$MINIUPNPC_INCLUDE_PATH
     LIBS += $$join(MINIUPNPC_LIB_PATH,,-L,) -lminiupnpc
     win32:LIBS += -liphlpapi
