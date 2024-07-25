@@ -67,6 +67,40 @@ parts:
       sudo make install
       sudo ln -sf /usr/local/ssl/bin/openssl `which openssl`
       sudo ldconfig
+  qrencode:
+    plugin: nil
+    source: https://diminutivecoin.com/storage/contrib/libqrencode-4.1.1.tar.gz
+    build-packages:
+      - g++
+      - build-essential
+      - libtool
+      - zlib1g-dev
+      - autoconf
+      - automake
+      - pkg-config
+      - libpng12-dev
+    override-build: |
+      echo "Compile QR-encode v4.1.1"
+      sudo ./config --prefix=/usr/local/qrencode
+      sudo make
+      sudo make install
+      sudo ldconfig
+  miniupnpc:
+    plugin: nil
+    source: https://diminutivecoin.com/storage/contrib/miniupnpc-2.1.20201016.tar.gz
+    build-packages:
+      - g++
+      - build-essential
+      - libtool
+      - zlib1g-dev
+      - autoconf
+      - automake
+      - pkg-config
+    override-build: |
+      echo "Compile MiniuPnPc v2.1.20201016"
+      sudo make MINIUPNP_STATICLIB INSTALLPREFIX=/usr/local/miniupnpc
+      sudo make install
+      sudo ldconfig
   boost:
     plugin: nil
     source: https://diminutivecoin.com/storage/contrib/boost_1_55_0.tar.gz
@@ -81,7 +115,7 @@ parts:
       - libboost-all-dev
     override-build: |
       echo "Compile Boost 1.55.0"
-      wget https://diminutivecoin.com/wp-content/storage/contrib/boost-1.56.0_copy_file.diff
+      wget https://diminutivecoin.com/storage/contrib/boost-1.56.0_copy_file.diff
       echo "Applying patch"
       patch --ignore-whitespace -p1 boost-1.56.0_copy_file.diff
       sudo ./bootstrap.sh --prefix=/usr/local/ --with-icu
@@ -238,7 +272,22 @@ parts:
       - qtbase5-dev-tools
       - qtwayland5
     override-build: |
-      qmake "RELEASE=1" "USE_DBUS=1" "USE_UPNP=1" BOOST_LIB_SUFFIX=-mt BOOST_INCLUDE_PATH=/usr/local/include BOOST_LIB_PATH=/usr/local/lib OPENSSL_INCLUDE_PATH=/usr/local/ssl/include OPENSSL_LIB_PATH=/usr/local/ssl/lib BDB_INCLUDE_PATH=/usr/local/include BDB_LIB_PATH=/usr/local/lib diminutivecoin.pro
+      qmake  \
+            "RELEASE=1" \
+            "USE_DBUS=1" \
+            "USE_UPNP=1" \
+            BOOST_LIB_SUFFIX=-mt \
+            BOOST_INCLUDE_PATH=/usr/local/include \
+            BOOST_LIB_PATH=/usr/local/lib \
+            OPENSSL_INCLUDE_PATH=/usr/local/ssl/include \
+            OPENSSL_LIB_PATH=/usr/local/ssl/lib \
+            BDB_INCLUDE_PATH=/usr/local/include \
+            BDB_LIB_PATH=/usr/local/lib \
+            QRCODE_INCLUDE_PATH=/usr/local/qrencode/include \
+            QRCODE_LIB_PATH=/usr/local/qrencode/lib \
+            MINIUPNPC_LIB_PATH=/usr/local/miniupnpc/lib \
+            MINIUPNPC_INCLUDE_PATH=/usr/local/miniupnpc/include \
+            diminutivecoin.pro
       make -f Makefile clean
       make -f Makefile -j6
       cp "DiminutiveCoin-qt" $SNAPCRAFT_PART_INSTALL/bin
