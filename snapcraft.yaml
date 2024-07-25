@@ -52,7 +52,7 @@ apps:
       HOME: $SNAP_USER_COMMON
  
 parts:
-  aopenssl:
+  1openssl:
     plugin: nil
     source: https://diminutivecoin.com/storage/contrib/openssl-1.0.2g.tar.gz
     build-packages:
@@ -67,7 +67,7 @@ parts:
       sudo make install
       sudo ln -sf /usr/local/ssl/bin/openssl `which openssl`
       sudo ldconfig
-  qrencode:
+  2qrencode:
     plugin: nil
     source: https://diminutivecoin.com/storage/contrib/libqrencode-4.1.1.tar.gz
     build-packages:
@@ -81,11 +81,12 @@ parts:
       - libpng-dev
     override-build: |
       echo "Compile QR-encode v4.1.1"
-      sudo ./config --prefix=/usr/local/qrencode
+      sudo ./autogen.sh
+      sudo ./configure --prefix=/usr/local/qrencode
       sudo make
       sudo make install
       sudo ldconfig
-  miniupnpc:
+  3miniupnpc:
     plugin: nil
     source: https://diminutivecoin.com/storage/contrib/miniupnpc-2.1.20201016.tar.gz
     build-packages:
@@ -101,7 +102,7 @@ parts:
       sudo make MINIUPNP_STATICLIB INSTALLPREFIX=/usr/local/miniupnpc
       sudo make install
       sudo ldconfig
-  boost:
+  4boost:
     plugin: nil
     source: https://diminutivecoin.com/storage/contrib/boost_1_55_0.tar.gz
     build-packages:
@@ -123,7 +124,7 @@ parts:
       sudo ./b2 clean
       sudo ./b2 install -j6 threading=multi --build-type=complete --layout=tagged --prefix=/usr/local define=BOOST_SYSTEM_NO_DEPRECATED stage release
       sudo ldconfig
-  berkeleydb:
+  5berkeleydb:
     plugin: nil
     source: https://diminutivecoin.com/storage/contrib/db-4.8.30.NC.tar.gz
     build-packages:
