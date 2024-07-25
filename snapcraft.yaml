@@ -82,7 +82,7 @@ parts:
     override-build: |
       echo "Compile QR-encode v4.1.1"
       sudo ./autogen.sh
-      sudo ./configure --prefix=/usr/local/qrencode --disable-shared
+      sudo ./configure --prefix=/usr/local/qrencode --enable-static --disable-shared --without-tools
       sudo make
       sudo make install
       sudo ldconfig
