@@ -292,7 +292,6 @@ parts:
     source-type: git
     source-tag: main
     plugin: qmake
-    qt-version: qt5
     build-packages:
       - wget
       - unzip
@@ -343,6 +342,13 @@ parts:
       - libqt5widgets5
       - qtwayland5
     override-build: |
+      QT_BASE_DIR=/opt/qt515
+      export QTDIR=$QT_BASE_DIR
+      export PATH=$QT_BASE_DIR/bin:$PATH
+      export LD_LIBRARY_PATH=$QT_BASE_DIR/lib/$SNAPCRAFT_ARCH_TRIPLET:$QT_BASE_DIR/lib:${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}
+      export PKG_CONFIG_PATH=$QT_BASE_DIR/lib/pkgconfig:${PKG_CONFIG_PATH:+:$PKG_CONFIG_PATH}
+
+      echo "Using qmake"
       qmake  \
             "RELEASE=1" \
             "USE_DBUS=1" \
