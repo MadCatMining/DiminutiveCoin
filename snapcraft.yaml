@@ -200,6 +200,7 @@ parts:
     source-type: git
     source-tag: main
     plugin: nil
+    after: [1openssl, 3miniupnpc, 4boost, 5berkeleydb]
     build-packages:
       - build-essential
       - libtool
