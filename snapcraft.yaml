@@ -192,7 +192,6 @@ parts:
       - libqt5gui5
       - libgdk-pixbuf2.0-0
       - libqt5svg5
-      - appmenu-qt5
       - locales-all
       - xdg-user-dirs
       - fcitx-frontend-qt5
@@ -259,24 +258,6 @@ parts:
           MF="makefile.unix"
       elif [ "$ARCH" = *"i686"* ]; then
           MF="makefile.unix"
-      elif [ "$ARCH" = *"armv6l"* ]; then
-          MF="makefile.arm"
-      elif [ "$ARCH" = *"armv7l"* ]; then
-          MF="makefile.arm"
-      elif [ "$ARCH" = *"armv8"* ] || [ "$ARCH" = "aarch64" ]; then
-          MF="makefile.arm"
-      elif [ "$ARCH" = *"mips64le"* ]; then
-          MF="makefile.arm"
-      elif [ "$ARCH" = *"mips64"* ]; then
-          MF="makefile.arm"
-      elif [ "$ARCH" = *"mipsle"* ]; then
-          MF="makefile.arm"
-      elif [ "$ARCH" = *"mips"* ]; then
-          MF="makefile.arm"
-      elif [[ "$ARCH" == "ppc64le" ]]; then
-          MF="makefile.arm"
-      elif [[ "$ARCH" == "ppc64" ]]; then
-          MF="makefile.arm"
       fi
       chmod 775 share/genbuild.sh && chmod 775 src/leveldb/build_detect_platform 
       cd src/leveldb
