@@ -172,7 +172,7 @@ parts:
   qt515-core20:
     plugin: dump
     source: https://github.com/keshavbhatt/qt515-core20.git
-    source-branch: master
+    source-branch: main
     stage:
       - -usr/share/doc
       - -usr/share/man
