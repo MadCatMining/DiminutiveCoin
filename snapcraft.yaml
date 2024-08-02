@@ -200,7 +200,7 @@ parts:
     source-type: git
     source-tag: main
     plugin: nil
-    after: [1openssl, 3miniupnpc, 4boost, 5berkeleydb]
+    after: [1openssl, 4boost, 5berkeleydb]
     build-packages:
       - build-essential
       - libtool
@@ -208,22 +208,7 @@ parts:
       - automake
       - pkg-config
       - bsdmainutils
-      - python3
-      - qt515base
-      - qt515tools
-      - qt515webengine
-      - qt515location
-      - qt515xmlpatterns
-      - libprotobuf-dev
-      - protobuf-compiler
-      - libqt5gui5
-      - libqt5core5a
-      - libqt5dbus5
-      - qttools5-dev
-      - qttools5-dev-tools
-      - qtbase5-dev
-      - qt5-qmake
-      - libqt5widgets5
+      - libevent-dev
     stage-packages:
       - build-essential
       - libtool
@@ -231,23 +216,7 @@ parts:
       - automake
       - pkg-config
       - bsdmainutils
-      - python3
-      - qt515base
-      - qt515tools
-      - qt515webengine
-      - qt515location
-      - qt515xmlpatterns
-      - libprotobuf-dev
-      - protobuf-compiler
-      - libqt5gui5
-      - libqt5core5a
-      - libqt5dbus5
-      - qttools5-dev
-      - qttools5-dev-tools
-      - qtbase5-dev
-      - qt5-qmake
-      - libqt5widgets5
-      - qtwayland5
+      - libevent-dev
     override-build: |
       echo "Override build for DiminutiveCoin"
       ARCH=$(uname -m)
@@ -282,7 +251,6 @@ parts:
       - build-essential
       - apt-transport-https
       - zlib1g-dev
-      - libminiupnpc-dev
       - libevent-dev
       - libtool
       - libprotobuf-dev
@@ -307,7 +275,6 @@ parts:
       - build-essential
       - apt-transport-https
       - zlib1g-dev
-      - libminiupnpc-dev
       - libevent-dev
       - libtool
       - qt515base
