@@ -7,12 +7,20 @@ version: '1.0.1.4'
 summary: DiminutiveCoin
 description: | 
   An open source hybrid cryptocurrency called DiminutiveCoin, which features Staking, Mining, Multisig, and much more!
-base: core18
+base: core20
   
 grade: stable
 confinement: strict
 
-plugs: # plugs for theming, font settings, cursor and to use gtk3 file chooser
+package-repositories:
+  - type: apt
+    formats: [deb]
+    components: [main]
+    suites: [focal]
+    key-id: C65D51784EDC19A871DBDBB710C56D0DE9977759
+    url: https://ppa.launchpadcontent.net/beineri/opt-qt-5.15.4-focal/ubuntu
+
+plugs:
   gtk-3-themes:
     interface: content
     target: $SNAP/data-dir/themes
@@ -25,6 +33,10 @@ plugs: # plugs for theming, font settings, cursor and to use gtk3 file chooser
     interface: content
     target: $SNAP/data-dir/sounds
     default-provider: gtk-common-themes:sounds-themes
+  qt515-core20:
+    interface: content
+    target: $SNAP/qt515-core20
+    default-provider: qt515-core20
  
 apps:
   diminutivecoind:
@@ -50,6 +62,7 @@ apps:
       QT_QPA_PLATFORMTHEME: gtk3
       XDG_DATA_DIRS: $SNAP_USER_DATA:/var/lib/snapd/desktop:$XDG_DATA_DIRS
       HOME: $SNAP_USER_COMMON
+      SNAP_DESKTOP_RUNTIME: $SNAP/qt515-core20
  
 parts:
   1openssl:
@@ -156,32 +169,33 @@ parts:
       sudo ln -sf libdb-4.8.a libdb.a
       sudo ln -sf libdb_cxx-4.8.a libdb_cxx.a
       sudo ldconfig
-  desktop-qt5:
-    build-packages:
-    - build-essential
-    - qtbase5-dev
-    - dpkg-dev
-    make-parameters:
-    - FLAVOR=qt5
-    plugin: make
-    source: https://github.com/ubuntu/snapcraft-desktop-helpers.git
-    source-subdir: qt
+  qt515-core20:
+    plugin: dump
+    source: https://github.com/keshavbhatt/qt515-core20.git
+    source-branch: master
+    stage:
+      - -usr/share/doc
+      - -usr/share/man
     stage-packages:
-    - libxkbcommon0
-    - ttf-ubuntu-font-family
-    - dmz-cursor-theme
-    - light-themes
-    - adwaita-icon-theme
-    - gnome-themes-standard
-    - shared-mime-info
-    - libqt5gui5
-    - libgdk-pixbuf2.0-0
-    - libqt5svg5
-    - try:
+      - libgl1-mesa-dev
+  desktop-qt5:
+    plugin: nil
+    source: https://github.com/keshavbhatt/qt515-core20.git
+    stage-packages:
+      - libxkbcommon0
+      - ttf-ubuntu-font-family
+      - dmz-cursor-theme
+      - light-themes
+      - adwaita-icon-theme
+      - gnome-themes-standard
+      - shared-mime-info
+      - libqt5gui5
+      - libgdk-pixbuf2.0-0
+      - libqt5svg5
       - appmenu-qt5
-    - locales-all
-    - xdg-user-dirs
-    - fcitx-frontend-qt5
+      - locales-all
+      - xdg-user-dirs
+      - fcitx-frontend-qt5
   daemon:
     source: https://github.com/MadCatMining/DiminutiveCoin.git
     source-type: git
@@ -193,17 +207,61 @@ parts:
       - autotools-dev
       - automake
       - pkg-config
-      - libevent-dev
       - bsdmainutils
+      - python3
+      - qt515base
+      - qt515tools
+      - qt515webengine
+      - qt515location
+      - qt515xmlpatterns
+      - libprotobuf-dev
+      - protobuf-compiler
+      - libqt5gui5
+      - libqt5core5a
+      - libqt5dbus5
+      - qttools5-dev
+      - qttools5-dev-tools
+      - qtbase5-dev
+      - qt5-qmake
+      - libqt5widgets5
+    stage-packages:
+      - build-essential
+      - libtool
+      - autotools-dev
+      - automake
+      - pkg-config
+      - bsdmainutils
+      - python3
+      - qt515base
+      - qt515tools
+      - qt515webengine
+      - qt515location
+      - qt515xmlpatterns
+      - libprotobuf-dev
+      - protobuf-compiler
+      - libqt5gui5
+      - libqt5core5a
+      - libqt5dbus5
+      - qttools5-dev
+      - qttools5-dev-tools
+      - qtbase5-dev
+      - qt5-qmake
+      - libqt5widgets5
+      - qtwayland5
     override-build: |
-      set -x
+      echo "Override build for DiminutiveCoin"
       ARCH=$(uname -m)
-      MF=makefile.unix
-      if [ "$ARCH" = "x86_64" ]; then
+      echo "Architecture: $ARCH"
+      MF="makefile.unix"
+      if [ "$ARCH" = *"x86_64"* ]; then
           MF="makefile.unix"
-      elif [ "$ARCH" = "i686" ] || [ "$ARCH" = "i386" ]; then
+      elif [ "$ARCH" = *"i386"* ]; then
+          MF="makefile.unix"
+      elif [ "$ARCH" = *"i686"* ]; then
+          MF="makefile.unix"
+      elif [ "$ARCH" = *"armv6l"* ]; then
           MF="makefile.arm"
-      elif [ "$ARCH" = "armv7l" ] || [ "$ARCH" = "armv6l" ]; then
+      elif [ "$ARCH" = *"armv7l"* ]; then
           MF="makefile.arm"
       elif [ "$ARCH" = *"armv8"* ] || [ "$ARCH" = "aarch64" ]; then
           MF="makefile.arm"
@@ -247,13 +305,19 @@ parts:
       - libtool
       - libprotobuf-dev
       - protobuf-compiler
+      - qt515base
+      - qt515tools
+      - qt515webengine
+      - qt515location
+      - qt515xmlpatterns
       - libqt5gui5
       - libqt5core5a
       - libqt5dbus5
       - qttools5-dev
       - qttools5-dev-tools
-      - qt5-default
-      - qtbase5-dev-tools
+      - qtbase5-dev
+      - qt5-qmake
+      - libqt5widgets5
     stage-packages:
       - wget
       - unzip
@@ -264,13 +328,19 @@ parts:
       - libminiupnpc-dev
       - libevent-dev
       - libtool
+      - qt515base
+      - qt515tools
+      - qt515webengine
+      - qt515location
+      - qt515xmlpatterns
       - libqt5gui5
       - libqt5core5a
       - libqt5dbus5
       - qttools5-dev
       - qttools5-dev-tools
-      - qt5-default
-      - qtbase5-dev-tools
+      - qtbase5-dev
+      - qt5-qmake
+      - libqt5widgets5
       - qtwayland5
     override-build: |
       qmake  \
