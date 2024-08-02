@@ -209,14 +209,6 @@ parts:
       - pkg-config
       - bsdmainutils
       - libevent-dev
-    stage-packages:
-      - build-essential
-      - libtool
-      - autotools-dev
-      - automake
-      - pkg-config
-      - bsdmainutils
-      - libevent-dev
     override-build: |
       echo "Override build for DiminutiveCoin"
       ARCH=$(uname -m)
