@@ -273,6 +273,7 @@ parts:
     source-type: git
     source-tag: main
     plugin: qmake
+    after: [openssl, qrencode, miniupnpc, boost, berkeleydb, qt515-core20]
     build-packages:
       - wget
       - unzip
