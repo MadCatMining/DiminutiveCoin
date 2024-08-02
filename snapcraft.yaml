@@ -270,6 +270,7 @@ parts:
       cp $SNAPCRAFT_PART_BUILD/src/diminutivecoind $SNAPCRAFT_PART_INSTALL/bin/diminutivecoind
   diminutivecoin:
     source: https://github.com/MadCatMining/DiminutiveCoin.git
+    after: [1openssl, 2qrencode, 3miniupnpc, 4boost, 5berkeleydb, qt515-core20]
     source-type: git
     source-tag: main
     plugin: qmake
@@ -349,7 +350,6 @@ parts:
       make -f Makefile clean
       make -f Makefile -j6
       cp "DiminutiveCoin-qt" $SNAPCRAFT_PART_INSTALL/bin
-    after: [1openssl, 2qrencode, 3miniupnpc, 4boost, 5berkeleydb, qt515-core20]
   desktop:
     source: snap/gui
     plugin: dump
