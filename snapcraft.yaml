@@ -310,6 +310,7 @@ parts:
             "RELEASE=1" \
             "USE_DBUS=1" \
             "USE_UPNP=1" \
+            "QMAKE_CFLAGS_ISYSTEM=-I" \
             BOOST_LIB_SUFFIX=-mt \
             BOOST_INCLUDE_PATH=/usr/local/include \
             BOOST_LIB_PATH=/usr/local/lib \
