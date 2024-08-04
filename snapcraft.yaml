@@ -261,7 +261,11 @@ parts:
 
     override-build: |
 
-      cd /build/diminutivecoin/parts/wallet/src && \
+      cd .. && \
+
+      cp -R src/* $SNAPCRAFT_PART_BUILD/ && \
+      
+      cd $SNAPCRAFT_PART_BUILD/ && \
 
       set -x && \
 
