@@ -261,7 +261,7 @@ parts:
 
     override-build: |
 
-      cd /root/parts/wallet/src && \
+      cd /build/diminutivecoin/parts/wallet/src && \
 
       set -x && \
 
