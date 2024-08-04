@@ -141,7 +141,7 @@ parts:
       patch --ignore-whitespace -p1 < boost-1.56.0_copy_file.diff && \
       sudo ./bootstrap.sh --prefix=/usr/local/ --with-icu && \
       sudo ./b2 clean && \
-      sudo ./b2 install -j6 threading=multi --build-type=complete --layout=tagged --prefix=/usr/local define=BOOST_SYSTEM_NO_DEPRECATED stage release && \
+      sudo ./b2 install -j6 threading=multi --build-type=complete --layout=tagged --without-context --without-coroutine --prefix=/usr/local define=BOOST_SYSTEM_NO_DEPRECATED stage release && \
       sudo ldconfig
 
   berkeleydb:
