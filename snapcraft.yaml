@@ -12,15 +12,7 @@ base: core20
 grade: stable
 confinement: strict
 
-package-repositories:
-  - type: apt
-    formats: [deb]
-    components: [main]
-    suites: [focal]
-    key-id: C65D51784EDC19A871DBDBB710C56D0DE9977759
-    url: https://ppa.launchpadcontent.net/beineri/opt-qt-5.15.4-focal/ubuntu
-
-plugs:
+plugs: # plugs for theming, font settings, cursor and to use gtk3 file chooser
   gtk-3-themes:
     interface: content
     target: $SNAP/data-dir/themes
@@ -33,10 +25,6 @@ plugs:
     interface: content
     target: $SNAP/data-dir/sounds
     default-provider: gtk-common-themes:sounds-themes
-  qt515-core20:
-    interface: content
-    target: $SNAP/qt515-core20
-    default-provider: qt515-core20
  
 apps:
   diminutivecoind:
@@ -62,17 +50,21 @@ apps:
       QT_QPA_PLATFORMTHEME: gtk3
       XDG_DATA_DIRS: $SNAP_USER_DATA:/var/lib/snapd/desktop:$XDG_DATA_DIRS
       HOME: $SNAP_USER_COMMON
-      SNAP_DESKTOP_RUNTIME: $SNAP/qt515-core20
  
 parts:
-  1openssl:
+
+  openssl:
+
     plugin: nil
+
     source: https://diminutivecoin.com/storage/contrib/openssl-1.0.2g.tar.gz
+
     build-packages:
       - g++
       - build-essential
       - libtool
       - zlib1g-dev
+
     override-build: |
       echo "Compile OpenSSL 1.0.2g"
       sudo ./config --prefix=/usr/local/ssl --openssldir=/usr/local/ssl -static zlib
@@ -80,9 +72,13 @@ parts:
       sudo make install
       sudo ln -sf /usr/local/ssl/bin/openssl `which openssl`
       sudo ldconfig
-  2qrencode:
+
+  qrencode:
+
     plugin: nil
+
     source: https://diminutivecoin.com/storage/contrib/libqrencode-4.1.1.tar.gz
+
     build-packages:
       - g++
       - build-essential
@@ -92,6 +88,7 @@ parts:
       - automake
       - pkg-config
       - libpng-dev
+
     override-build: |
       echo "Compile QR-encode v4.1.1"
       sudo ./autogen.sh
@@ -99,9 +96,13 @@ parts:
       sudo make
       sudo make install
       sudo ldconfig
-  3miniupnpc:
+
+  miniupnpc:
+
     plugin: nil
+
     source: https://diminutivecoin.com/storage/contrib/miniupnpc-2.1.20201016.tar.gz
+
     build-packages:
       - g++
       - build-essential
@@ -110,14 +111,19 @@ parts:
       - autoconf
       - automake
       - pkg-config
+
     override-build: |
       echo "Compile MiniuPnPc v2.1.20201016"
       sudo make upnpc-static INSTALLPREFIX=/usr/local/miniupnpc
       sudo make install
       sudo ldconfig
-  4boost:
+
+  boost:
+
     plugin: nil
+
     source: https://diminutivecoin.com/storage/contrib/boost_1_55_0.tar.gz
+
     build-packages:
       - g++
       - clang
@@ -127,19 +133,23 @@ parts:
       - libicu-dev
       - libbz2-dev
       - libboost-all-dev
+
     override-build: |
       echo "Compile Boost 1.55.0"
-      wget https://diminutivecoin.com/storage/contrib/boost-1.56.0_copy_file.diff
-      echo "Applying patch"
-      patch --ignore-whitespace -p1 boost-1.56.0_copy_file.diff
-      sudo ./bootstrap.sh --prefix=/usr/local/ --with-icu
-      #sudo ./b2 install -j6 threading=multi --build-type=complete --layout=tagged
-      sudo ./b2 clean
-      sudo ./b2 install -j6 threading=multi --build-type=complete --layout=tagged --prefix=/usr/local define=BOOST_SYSTEM_NO_DEPRECATED stage release
+      wget https://diminutivecoin.com/storage/contrib/boost-1.56.0_copy_file.diff && \
+      echo "Applying patch" && \
+      patch --ignore-whitespace -p1 < boost-1.56.0_copy_file.diff && \
+      sudo ./bootstrap.sh --prefix=/usr/local/ --with-icu && \
+      sudo ./b2 clean && \
+      sudo ./b2 install -j6 threading=multi --build-type=complete --layout=tagged --prefix=/usr/local define=BOOST_SYSTEM_NO_DEPRECATED stage release && \
       sudo ldconfig
-  5berkeleydb:
+
+  berkeleydb:
+
     plugin: nil
+
     source: https://diminutivecoin.com/storage/contrib/db-4.8.30.NC.tar.gz
+
     build-packages:
       - build-essential 
       - libtool
@@ -151,146 +161,147 @@ parts:
       - curl
       - wget
       - patch
+
     override-build: |
       echo "Compile BerkeleyDB 4.8.30.NC"
-      wget https://diminutivecoin.com/storage/contrib/db_4.8.30.NC.patch
-      echo "Applying patch"
-      patch --ignore-whitespace -p1 db_4.8.30.NC.patch
-      cd dist/
-      rm -f "config.guess"
-      rm -f "config.sub"
-      wget https://diminutivecoin.com/storage/contrib/config.guess
-      wget https://diminutivecoin.com/storage/contrib/config.sub
-      cd ..
-      cd build_unix/
-      sudo ../dist/configure --enable-cxx --disable-shared --disable-replication --with-pic --prefix=/usr/local
-      sudo make -j6
-      sudo make install -j6
-      sudo ln -sf libdb-4.8.a libdb.a
-      sudo ln -sf libdb_cxx-4.8.a libdb_cxx.a
+      wget https://diminutivecoin.com/storage/contrib/db_4.8.30.NC.patch && \
+      echo "Applying patch" && \
+      patch --ignore-whitespace -p1 < db_4.8.30.NC.patch && \
+      cd dist/ && \
+      rm -f "config.guess" && \
+      rm -f "config.sub" && \
+      wget https://diminutivecoin.com/storage/contrib/config.guess && \
+      wget https://diminutivecoin.com/storage/contrib/config.sub && \
+      cd .. && \
+      cd build_unix/ && \
+      sudo ../dist/configure --enable-cxx --disable-shared --disable-replication --with-pic --prefix=/usr/local && \
+      sudo make -j6 && \
+      sudo make install -j6 && \
+      sudo ln -sf libdb-4.8.a libdb.a && \
+      sudo ln -sf libdb_cxx-4.8.a libdb_cxx.a && \
       sudo ldconfig
-  qt515-core20:
-    plugin: dump
-    source: https://github.com/keshavbhatt/qt515-core20.git
-    source-branch: main
-    stage:
-      - -usr/share/doc
-      - -usr/share/man
-    stage-packages:
-      - libgl1-mesa-dev
+      
   desktop-qt5:
-    plugin: nil
-    source: https://github.com/keshavbhatt/qt515-core20.git
+
+    build-packages:
+    - build-essential
+    - qtbase5-dev
+    - dpkg-dev
+
+    make-parameters:
+    - FLAVOR=qt5
+
+    plugin: make
+
+    source: https://github.com/ubuntu/snapcraft-desktop-helpers.git
+
+    source-subdir: qt
+
     stage-packages:
-      - libxkbcommon0
-      - ttf-ubuntu-font-family
-      - dmz-cursor-theme
-      - light-themes
-      - adwaita-icon-theme
-      - gnome-themes-standard
-      - shared-mime-info
-      - libqt5gui5
-      - libgdk-pixbuf2.0-0
-      - libqt5svg5
+    - libxkbcommon0
+    - ttf-ubuntu-font-family
+    - dmz-cursor-theme
+    - light-themes
+    - adwaita-icon-theme
+    - gnome-themes-standard
+    - shared-mime-info
+    - libqt5gui5
+    - libgdk-pixbuf2.0-0
+    - libqt5svg5
+
+    - try:
+      - appmenu-qt5
       - locales-all
       - xdg-user-dirs
       - fcitx-frontend-qt5
-  daemon:
+
+  wallet:
+
     source: https://github.com/MadCatMining/DiminutiveCoin.git
+
     source-type: git
+
     source-tag: main
-    plugin: nil
-    after: [1openssl, 4boost, 5berkeleydb]
+
+    plugin: qmake
+
+    after: [openssl,qrencode,miniupnpc,boost,berkeleydb]
+
     build-packages:
       - build-essential
+      - zlib1g-dev
       - libtool
       - autotools-dev
       - automake
       - pkg-config
       - bsdmainutils
       - libevent-dev
-    override-build: |
-      echo "Override build for DiminutiveCoin"
-      ARCH=$(uname -m)
-      echo "Architecture: $ARCH"
-      MF="makefile.unix"
-      if [ "$ARCH" = *"x86_64"* ]; then
-          MF="makefile.unix"
-      elif [ "$ARCH" = *"i386"* ]; then
-          MF="makefile.unix"
-      elif [ "$ARCH" = *"i686"* ]; then
-          MF="makefile.unix"
-      fi
-      chmod 775 share/genbuild.sh && chmod 775 src/leveldb/build_detect_platform 
-      cd src/leveldb
-      make clean
-      BOOST_LIB_SUFFIX=-mt BOOST_INCLUDE_PATH=/usr/local/include BOOST_LIB_PATH=/usr/local/lib OPENSSL_INCLUDE_PATH=/usr/local/ssl/include OPENSSL_LIB_PATH=/usr/local/ssl/lib BDB_INCLUDE_PATH=/usr/local/include BDB_LIB_PATH=/usr/local/lib make libleveldb.a libmemenv.a -j4
-      cd ..
-      make -f "${MF}" clean
-      BOOST_LIB_SUFFIX=-mt BOOST_INCLUDE_PATH=/usr/local/include BOOST_LIB_PATH=/usr/local/lib OPENSSL_INCLUDE_PATH=/usr/local/ssl/include OPENSSL_LIB_PATH=/usr/local/ssl/lib BDB_INCLUDE_PATH=/usr/local/include BDB_LIB_PATH=/usr/local/lib make -f "${MF}" STATIC=1 -j4
-      mkdir $SNAPCRAFT_PART_INSTALL/bin
-      cp $SNAPCRAFT_PART_BUILD/src/diminutivecoind $SNAPCRAFT_PART_INSTALL/bin/diminutivecoind
-  diminutivecoin:
-    source: https://github.com/MadCatMining/DiminutiveCoin.git
-    after: [1openssl, 2qrencode, 3miniupnpc, 4boost, 5berkeleydb, qt515-core20]
-    source-type: git
-    source-tag: main
-    plugin: qmake
-    build-packages:
-      - wget
-      - unzip
-      - curl
-      - build-essential
-      - apt-transport-https
-      - zlib1g-dev
-      - libevent-dev
-      - libtool
       - libprotobuf-dev
       - protobuf-compiler
-      - qt515base
-      - qt515tools
-      - qt515webengine
-      - qt515location
-      - qt515xmlpatterns
       - libqt5gui5
       - libqt5core5a
       - libqt5dbus5
       - qttools5-dev
       - qttools5-dev-tools
-      - qtbase5-dev
-      - qt5-qmake
-      - libqt5widgets5
+      - qt5-default
+      - qtbase5-dev-tools
+
     stage-packages:
-      - wget
-      - unzip
-      - curl
       - build-essential
-      - apt-transport-https
       - zlib1g-dev
       - libevent-dev
       - libtool
-      - qt515base
-      - qt515tools
-      - qt515webengine
-      - qt515location
-      - qt515xmlpatterns
       - libqt5gui5
       - libqt5core5a
       - libqt5dbus5
       - qttools5-dev
       - qttools5-dev-tools
-      - qtbase5-dev
-      - qt5-qmake
-      - libqt5widgets5
-      - qtwayland5
-    override-build: |
-      QT_BASE_DIR=/opt/qt515
-      export QTDIR=$QT_BASE_DIR
-      export PATH=$QT_BASE_DIR/bin:$PATH
-      export LD_LIBRARY_PATH=$QT_BASE_DIR/lib/$SNAPCRAFT_ARCH_TRIPLET:$QT_BASE_DIR/lib:${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}
-      export PKG_CONFIG_PATH=$QT_BASE_DIR/lib/pkgconfig:${PKG_CONFIG_PATH:+:$PKG_CONFIG_PATH}
+      - qt5-default
+      - qtbase5-dev-tools
 
-      echo "Using qmake"
+    override-build: |
+
+      cd /root/parts/wallet/src && \
+
+      set -x && \
+
+      ARCH=$(uname -m) && \
+
+      echo "Architecture: $ARCH" && \
+
+      MF=makefile.unix && \
+
+      if [ "$ARCH" = "x86_64" ]; then
+          MF=makefile.unix
+
+      elif [ "$ARCH" = "i686" ]; then
+          MF=makefile.unix
+
+      elif [ "$ARCH" = "i386" ]; then
+          MF=makefile.unix
+
+      fi
+
+      chmod 775 share/genbuild.sh && chmod 775 src/leveldb/build_detect_platform && \
+
+      cd src/leveldb && \
+
+      make clean && \
+
+      BOOST_LIB_SUFFIX=-mt BOOST_INCLUDE_PATH=/usr/local/include BOOST_LIB_PATH=/usr/local/lib OPENSSL_INCLUDE_PATH=/usr/local/ssl/include OPENSSL_LIB_PATH=/usr/local/ssl/lib BDB_INCLUDE_PATH=/usr/local/include BDB_LIB_PATH=/usr/local/lib make libleveldb.a libmemenv.a -j5 && \
+
+      cd .. && \
+
+      make -f "${MF}" clean && \
+
+      BOOST_LIB_SUFFIX=-mt BOOST_INCLUDE_PATH=/usr/local/include BOOST_LIB_PATH=/usr/local/lib OPENSSL_INCLUDE_PATH=/usr/local/ssl/include OPENSSL_LIB_PATH=/usr/local/ssl/lib BDB_INCLUDE_PATH=/usr/local/include BDB_LIB_PATH=/usr/local/lib make -f "${MF}" STATIC=1 -j5 && \
+
+      mkdir $SNAPCRAFT_PART_INSTALL/bin && \
+
+      cp $SNAPCRAFT_PART_BUILD/src/diminutivecoind $SNAPCRAFT_PART_INSTALL/bin/diminutivecoind && \
+
+      cd .. && \
+
       qmake  \
             "RELEASE=1" \
             "USE_DBUS=1" \
@@ -306,13 +317,18 @@ parts:
             QRENCODE_LIB_PATH=/usr/local/qrencode/lib \
             MINIUPNPC_LIB_PATH=/usr/lib \
             MINIUPNPC_INCLUDE_PATH=/usr/include \
-            diminutivecoin.pro
-      make -f Makefile clean
-      make -f Makefile -j6
+            QMAKE_LRELEASE=/usr/bin/lrelease diminutivecoin.pro && \
+
+      make -f Makefile clean && \
+
+      make -f Makefile -j5 && \
+
       cp "DiminutiveCoin-qt" $SNAPCRAFT_PART_INSTALL/bin
+
   desktop:
     source: snap/gui
     plugin: dump
+
   hooks:
     plugin: dump
     source: hooks/
@@ -322,7 +338,9 @@ parts:
 hooks:
   install:
     plugs: [network, network-bind]
+
   post-refresh:
     plugs: [network, network-bind]
+
   configure:
     plugs: [network, network-bind]
