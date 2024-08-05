@@ -45,7 +45,7 @@ apps:
   diminutivecoin:
     command: "bin/desktop-launch DiminutiveCoin-qt"
     plugs: [home, network, network-bind, unity7, wayland, desktop-legacy, desktop, x11, gsettings]
-    desktop: meta/gui/diminutivecoin.desktop
+    desktop: diminutivecoin.desktop
     environment:
       QT_QPA_PLATFORMTHEME: gtk3
       XDG_DATA_DIRS: $SNAP_USER_DATA:/var/lib/snapd/desktop:$XDG_DATA_DIRS
