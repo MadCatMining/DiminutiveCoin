@@ -208,12 +208,10 @@ parts:
     - libqt5gui5
     - libgdk-pixbuf2.0-0
     - libqt5svg5
-
-    - try:
-      - appmenu-qt5
-      - locales-all
-      - xdg-user-dirs
-      - fcitx-frontend-qt5
+    - appmenu-qt5
+    - locales-all
+    - xdg-user-dirs
+    - fcitx-frontend-qt5
 
   wallet:
 
