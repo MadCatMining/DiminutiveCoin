@@ -43,7 +43,7 @@ apps:
       # https://docs.snapcraft.io/environment-variables/7983
       HOME: $SNAP_USER_COMMON
   diminutivecoin:
-    command: bin/desktop-launch ${SNAP}/bin/DiminutiveCoin-qt
+    command: 'bin/desktop-launch' '$SNAP/bin/DiminutiveCoin-qt'
     plugs: [home, network, network-bind, unity7, wayland, desktop-legacy, desktop, x11, gsettings]
     desktop: diminutivecoin.desktop
     environment:
