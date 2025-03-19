@@ -1,0 +1,93 @@
+#!/sbin/openrc-run
+
+# backward compatibility for existing gentoo layout 
+#
+if [ -d "/var/lib/diminutivecoin/.diminutivecoin" ]; then
+	DIMINUTIVECOIND_DEFAULT_DATADIR="/var/lib/diminutivecoin/.diminutivecoin"
+else
+	DIMINUTIVECOIND_DEFAULT_DATADIR="/var/lib/diminutivecoind"
+fi
+
+DIMINUTIVECOIND_CONFIGFILE=${DIMINUTIVECOIND_CONFIGFILE:-/etc/diminutivecoin/diminutivecoincoin.conf}
+DIMINUTIVECOIND_PIDDIR=${DIMINUTIVECOIND_PIDDIR:-/var/run/diminutivecoind}
+DIMINUTIVECOIND_PIDFILE=${DIMINUTIVECOIND_PIDFILE:-${DIMINUTIVECOIND_PIDDIR}/diminutivecoind.pid}
+DIMINUTIVECOIND_DATADIR=${DIMINUTIVECOIND_DATADIR:-${DIMINUTIVECOIND_DEFAULT_DATADIR}}
+DIMINUTIVECOIND_USER=${DIMINUTIVECOIND_USER:-${BITCOIN_USER:-diminutivecoin}}
+DIMINUTIVECOIND_GROUP=${DIMINUTIVECOIND_GROUP:-diminutivecoin}
+DIMINUTIVECOIND_BIN=${DIMINUTIVECOIND_BIN:-/usr/bin/diminutivecoind}
+DIMINUTIVECOIND_NICE=${DIMINUTIVECOIND_NICE:-${NICELEVEL:-0}}
+DIMINUTIVECOIND_OPTS="${DIMINUTIVECOIND_OPTS:-${BITCOIN_OPTS}}"
+
+name="Diminutivecoin Daemon"
+description="Diminutivecoin cryptocurrency P2P network daemon"
+
+command="/usr/bin/diminutivecoind"
+command_args="-pid=\"${DIMINUTIVECOIND_PIDFILE}\" \
+		-conf=\"${DIMINUTIVECOIND_CONFIGFILE}\" \
+		-datadir=\"${DIMINUTIVECOIND_DATADIR}\" \
+		-daemon \
+		${DIMINUTIVECOIND_OPTS}"
+
+required_files="${DIMINUTIVECOIND_CONFIGFILE}"
+start_stop_daemon_args="-u ${DIMINUTIVECOIND_USER} \
+			-N ${DIMINUTIVECOIND_NICE} -w 2000"
+pidfile="${DIMINUTIVECOIND_PIDFILE}"
+
+# The retry schedule to use when stopping the daemon. Could be either
+# a timeout in seconds or multiple signal/timeout pairs (like
+# "SIGKILL/180 SIGTERM/300")
+retry="${DIMINUTIVECOIND_SIGTERM_TIMEOUT}"
+
+depend() {
+	need localmount net
+}
+
+# verify
+# 1) that the datadir exists and is writable (or create it)
+# 2) that a directory for the pid exists and is writable
+# 3) ownership and permissions on the config file
+start_pre() {
+	checkpath \
+	-d \
+	--mode 0750 \
+	--owner "${DIMINUTIVECOIND_USER}:${DIMINUTIVECOIND_GROUP}" \
+	"${DIMINUTIVECOIND_DATADIR}"
+
+	checkpath \
+	-d \
+	--mode 0755 \
+	--owner "${DIMINUTIVECOIND_USER}:${DIMINUTIVECOIND_GROUP}" \
+	"${DIMINUTIVECOIND_PIDDIR}"
+
+	checkpath -f \
+	-o "${DIMINUTIVECOIND_USER}:${DIMINUTIVECOIND_GROUP}" \
+	-m 0660 \
+	"${DIMINUTIVECOIND_CONFIGFILE}"
+
+	checkconfig || return 1
+}
+
+checkconfig()
+{
+	if grep -qs '^rpcuser=' "${DIMINUTIVECOIND_CONFIGFILE}" && \
+		! grep -qs '^rpcpassword=' "${DIMINUTIVECOIND_CONFIGFILE}" ; then
+		eerror ""
+		eerror "ERROR: You must set a secure rpcpassword to run diminutivecoind."
+		eerror "The setting must appear in ${DIMINUTIVECOIND_CONFIGFILE}"
+		eerror ""
+		eerror "This password is security critical to securing wallets "
+		eerror "and must not be the same as the rpcuser setting."
+		eerror "You can generate a suitable random password using the following "
+		eerror "command from the shell:"
+		eerror ""
+		eerror "bash -c 'tr -dc a-zA-Z0-9 < /dev/urandom | head -c32 && echo'"
+		eerror ""
+		eerror "It is recommended that you also set alertnotify so you are "
+		eerror "notified of problems:"
+		eerror ""
+		eerror "ie: alertnotify=echo %%s | mail -s \"Diminutivecoin Alert\"" \
+			"team@diminutivecoin.com"
+		eerror ""
+		return 1
+	fi
+}

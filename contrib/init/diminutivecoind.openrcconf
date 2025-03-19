@@ -1,0 +1,33 @@
+# /etc/conf.d/diminutivecoind: config file for /etc/init.d/diminutivecoind
+
+# Config file location
+#DIMINUTIVECOIND_CONFIGFILE="/etc/diminutivecoin/diminutivecoin.conf"
+
+# What directory to write pidfile to?  (created and owned by $DIMINUTIVECOIND_USER)
+#DIMINUTIVECOIND_PIDDIR="/var/run/diminutivecoind"
+
+# What filename to give the pidfile
+#DIMINUTIVECOIND_PIDFILE="${DIMINUTIVECOIND_PIDDIR}/diminutivecoind.pid"
+
+# Where to write diminutivecoind data (be mindful that the blockchain is large)
+#DIMINUTIVECOIND_DATADIR="/var/lib/diminutivecoind"
+
+# User and group to own diminutivecoind process
+#DIMINUTIVECOIND_USER="diminutivecoin"
+#DIMINUTIVECOIND_GROUP="diminutivecoin"
+
+# Path to diminutivecoind executable
+#DIMINUTIVECOIND_BIN="/usr/bin/diminutivecoind"
+
+# Nice value to run diminutivecoind under
+#DIMINUTIVECOIND_NICE=0
+
+# Additional options (avoid -conf and -datadir, use flags above)
+#DIMINUTIVECOIND_OPTS=""
+
+# The timeout in seconds OpenRC will wait for diminutivecoind to terminate
+# after a SIGTERM has been raised.
+# Note that this will be mapped as argument to start-stop-daemon's
+# '--retry' option, which means you can specify a retry schedule
+# here. For more information see man 8 start-stop-daemon.
+DIMINUTIVECOIND_SIGTERM_TIMEOUT=600
