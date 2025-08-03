@@ -157,12 +157,17 @@ public:
 
         checkpointData = (CCheckpointData) {
                     boost::assign::map_list_of
-                    (     0, uint256S("0x0000051711c49b2374ba7c506cc089032492c618bb3a3227a39a2f392822785c"))   // Genesis
-                    ( 10000, uint256S("0x0000004bfd794aca7e3d06d32f963aebb70094cd8c07c6ade1791d9fed2949c4"))   //
-                    ( 25000, uint256S("0x0000001b6e343921dbcd23cbb60689ca8bb66e432e4a7a9274ecaeef38de1bbc"))   //
-                    ( 43000, uint256S("0x00000194e94e2866697db61c27bfed119a2a910cc04fcb7e44248e1a9cffb777")),  // Pre-release checkpoint
-                    1742304469,    // * UNIX timestamp of last checkpoint block
-                         43750,    // * total number of transactions between genesis and last checkpoint
+                    (     0,  uint256S("0x0000051711c49b2374ba7c506cc089032492c618bb3a3227a39a2f392822785c"))   // Genesis
+                    ( 10000,  uint256S("0x0000004bfd794aca7e3d06d32f963aebb70094cd8c07c6ade1791d9fed2949c4"))
+                    ( 25000,  uint256S("0x0000001b6e343921dbcd23cbb60689ca8bb66e432e4a7a9274ecaeef38de1bbc"))
+                    ( 43000,  uint256S("0x00000194e94e2866697db61c27bfed119a2a910cc04fcb7e44248e1a9cffb777"))   // Pre-release checkpoint
+                    ( 100000, uint256S("0x000000003e0ffa69abd8cd4c2d7c3ddd9ed54188813a5666971786413d84d571"))
+                    ( 150000, uint256S("0x000000000391ab502559f2e0cb1d5b81c03e05f1afdad62d4b853ca4c62737e7"))
+                    ( 200000, uint256S("0x9e9586e78734519f5cd4c88afec2518f3dde8eabd7a85802d6abe8717980066e"))
+                    ( 240000, uint256S("0x0000000002cc5f2d1554a6bd19e538565ef0a0de1ac9172f4d34feeb3414cbe4")),  // Pre-RPC "time" fix checkpoint 
+
+                    1754191738,    // * UNIX timestamp of last checkpoint block
+                        269312,    // * total number of transactions between genesis and last checkpoint
                                    //   (the tx=... number in the SetBestChain debug.log lines)
                         1200.0     // * estimated number of transactions per day after checkpoint
         };
