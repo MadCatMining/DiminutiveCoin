@@ -68,16 +68,34 @@ void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry)
     entry.push_back(Pair("txid", tx.GetHash().GetHex()));
     entry.push_back(Pair("size", (int)::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION)));
     entry.push_back(Pair("version", tx.nVersion));
-    entry.push_back(Pair("time", (int64_t)tx.nTime));
+
+    // Handle tx time safely with fallback logic
+    int64_t nTimeTx = tx.nTime;
+    CBlockIndex* pindex = nullptr;
+
+    if (!hashBlock.IsNull()) {
+        BlockMap::iterator mi = mapBlockIndex.find(hashBlock);
+        if (mi != mapBlockIndex.end())
+            pindex = mi->second;
+    }
+
+    if (!nTimeTx && tx.nVersion >= 2) {
+        if (pindex)
+            nTimeTx = pindex->GetBlockTime();
+        else
+            nTimeTx = GetAdjustedTime(); // fallback if block index is missing
+    }
+
+    entry.push_back(Pair("time", nTimeTx));
     entry.push_back(Pair("locktime", (int64_t)tx.nLockTime));
 
     UniValue vin(UniValue::VARR);
     for (unsigned int i = 0; i < tx.vin.size(); i++) {
         const CTxIn& txin = tx.vin[i];
         UniValue in(UniValue::VOBJ);
-        if (tx.IsCoinBase())
+        if (tx.IsCoinBase()) {
             in.push_back(Pair("coinbase", HexStr(txin.scriptSig.begin(), txin.scriptSig.end())));
-        else {
+        } else {
             in.push_back(Pair("txid", txin.prevout.hash.GetHex()));
             in.push_back(Pair("vout", (int64_t)txin.prevout.n));
             UniValue o(UniValue::VOBJ);
@@ -105,15 +123,13 @@ void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry)
 
     if (!hashBlock.IsNull()) {
         entry.push_back(Pair("blockhash", hashBlock.GetHex()));
-        BlockMap::iterator mi = mapBlockIndex.find(hashBlock);
-        if (mi != mapBlockIndex.end() && (*mi).second) {
-            CBlockIndex* pindex = (*mi).second;
+        if (pindex) {
             if (chainActive.Contains(pindex)) {
                 entry.push_back(Pair("confirmations", 1 + chainActive.Height() - pindex->nHeight));
                 entry.push_back(Pair("blocktime", pindex->GetBlockTime()));
-            }
-            else
+            } else {
                 entry.push_back(Pair("confirmations", 0));
+            }
         }
     }
 }
