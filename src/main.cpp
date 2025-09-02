@@ -1181,9 +1181,8 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state)
         {
             if (txout.nValue == 0) {
                 zeroValueOutputs++;
-                // Check if this looks like a POS-style malformed output
-                if (txout.scriptPubKey.IsNonStandard() && 
-                    txout.scriptPubKey.size() == 0) {
+                // Check if this looks like a POS-style malformed output by examining script size
+                if (txout.scriptPubKey.size() == 0) {
                     hasPOSStyleMalformedOutput = true;
                 }
             }
