@@ -1172,7 +1172,6 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state)
     }
 
     // Check for POS-style malformed output attack
-    // This protects against user transactions that contain POS-like zero-value outputs
     if (!tx.IsCoinBase() && !tx.IsCoinStake()) {
         bool hasPOSStyleMalformedOutput = false;
         int zeroValueOutputs = 0;
@@ -1190,7 +1189,7 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state)
             }
         }
         
-        // If we have a user transaction with multiple outputs and POS-style malformed zero-value outputs
+        // Only reject new transactions with this pattern
         if (tx.vout.size() > 1 && zeroValueOutputs >= 1 && hasPOSStyleMalformedOutput) {
             return state.DoS(100, error("CheckTransaction(): user transaction contains POS-style malformed zero-value outputs"), 
                            REJECT_INVALID, "bad-txns-pos-malformed-user");
@@ -1211,7 +1210,6 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state)
 
     return true;
 }
-
 
 void LimitMempoolSize(CTxMemPool& pool, size_t limit, unsigned long age) {
     int expired = pool.Expire(GetTime() - age);
