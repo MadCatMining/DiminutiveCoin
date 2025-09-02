@@ -1157,6 +1157,14 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state)
             return state.DoS(100, false, REJECT_INVALID, "bad-txns-vout-negative");
         if (txout.nValue > MAX_MONEY)
             return state.DoS(100, false, REJECT_INVALID, "bad-txns-vout-toolarge");
+        
+        // NEW: Additional protection for user transactions
+        // Check for empty script with zero value in non-coinbase/coinstake transactions
+        if (txout.nValue == 0 && txout.scriptPubKey.empty() && !tx.IsCoinBase() && !tx.IsCoinStake())
+        {
+            return state.DoS(100, error("CheckTransaction(): empty script with zero value for user transaction"));
+        }
+        
         nValueOut += txout.nValue;
         if (!MoneyRange(nValueOut))
             return state.DoS(100, false, REJECT_INVALID, "bad-txns-txouttotal-toolarge");
@@ -1169,30 +1177,6 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state)
         if (vInOutPoints.count(txin.prevout))
             return state.DoS(100, false, REJECT_INVALID, "bad-txns-inputs-duplicate");
         vInOutPoints.insert(txin.prevout);
-    }
-
-    // Check for POS-style malformed output attack
-    if (!tx.IsCoinBase() && !tx.IsCoinStake()) {
-        bool hasPOSStyleMalformedOutput = false;
-        int zeroValueOutputs = 0;
-        
-        // Count zero-value outputs and check for POS-style patterns
-        BOOST_FOREACH(const CTxOut& txout, tx.vout)
-        {
-            if (txout.nValue == 0) {
-                zeroValueOutputs++;
-                // Check if this looks like a POS-style malformed output by examining script size
-                if (txout.scriptPubKey.size() == 0) {
-                    hasPOSStyleMalformedOutput = true;
-                }
-            }
-        }
-        
-        // Only reject new transactions with this pattern
-        if (tx.vout.size() > 1 && zeroValueOutputs >= 1 && hasPOSStyleMalformedOutput) {
-            return state.DoS(100, error("CheckTransaction(): user transaction contains POS-style malformed zero-value outputs"), 
-                           REJECT_INVALID, "bad-txns-pos-malformed-user");
-        }
     }
 
     if (tx.IsCoinBase())
