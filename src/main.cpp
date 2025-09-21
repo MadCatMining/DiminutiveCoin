@@ -1157,6 +1157,14 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state)
             return state.DoS(100, false, REJECT_INVALID, "bad-txns-vout-negative");
         if (txout.nValue > MAX_MONEY)
             return state.DoS(100, false, REJECT_INVALID, "bad-txns-vout-toolarge");
+        
+        // NEW: Additional protection for user transactions
+        // Check for empty script with zero value in non-coinbase/coinstake transactions
+        if (txout.nValue == 0 && txout.scriptPubKey.empty() && !tx.IsCoinBase() && !tx.IsCoinStake())
+        {
+            return state.DoS(100, error("CheckTransaction(): empty script with zero value for user transaction"));
+        }
+        
         nValueOut += txout.nValue;
         if (!MoneyRange(nValueOut))
             return state.DoS(100, false, REJECT_INVALID, "bad-txns-txouttotal-toolarge");
