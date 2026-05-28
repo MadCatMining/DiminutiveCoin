@@ -1309,7 +1309,7 @@ bool CWallet::AbandonTransaction(const uint256& hashTx)
             walletdb.WriteTx(wtx);
             NotifyTransactionChanged(this, wtx.GetHash(), CT_UPDATED);
             // Iterate over all its outputs, and mark transactions in the wallet that spend them abandoned too
-            TxSpends::const_iterator iter = mapTxSpends.lower_bound(COutPoint(hashTx, 0));
+            TxSpends::const_iterator iter = mapTxSpends.lower_bound(COutPoint(now, 0));
             while (iter != mapTxSpends.end() && iter->first.hash == now) {
                 if (!done.count(iter->second)) {
                     todo.insert(iter->second);
@@ -1397,6 +1397,12 @@ void CWallet::SyncTransaction(const CTransaction& tx, const CBlockIndex *pindex,
         if (tx.IsCoinStake()) {
             if (IsFromMe(tx)) {
                 DisableTransaction(tx);
+                BOOST_FOREACH(const CTxIn& txin, tx.vin)
+                {
+                    map<uint256, CWalletTx>::iterator mi = mapWallet.find(txin.prevout.hash);
+                    if (mi != mapWallet.end())
+                        mi->second.MarkDirty();
+                }
                 return;
             }
         }
@@ -2187,7 +2193,7 @@ CAmount CWallet::GetStake() const
     for (map<uint256, CWalletTx>::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
     {
         const CWalletTx* pcoin = &(*it).second;
-        if (pcoin->IsCoinStake() && pcoin->GetBlocksToMaturity() > 0 && pcoin->GetDepthInMainChain() > 0)
+        if (pcoin->IsCoinStake() && pcoin->IsTrusted() && pcoin->GetBlocksToMaturity() > 0 && pcoin->GetDepthInMainChain() > 0)
             nTotal += CWallet::GetCredit(*pcoin, ISMINE_SPENDABLE);
     }
     return nTotal;
@@ -3394,18 +3400,39 @@ void CWallet::DisableTransaction(const CTransaction &tx)
 
     LOCK(cs_wallet);
     uint256 hash = tx.GetHash();
+    map<uint256, CWalletTx>::iterator mi = mapWallet.find(hash);
+    if (mi == mapWallet.end())
+        return;
+
     if(AbandonTransaction(hash))
     {
         RemoveFromSpends(hash);
-        set<CWalletTx*> setCoins;
         BOOST_FOREACH(const CTxIn& txin, tx.vin)
         {
-            CWalletTx &coin = mapWallet[txin.prevout.hash];
+            map<uint256, CWalletTx>::iterator it = mapWallet.find(txin.prevout.hash);
+            if (it == mapWallet.end())
+                continue;
+            CWalletTx &coin = it->second;
             coin.BindWallet(this);
+            coin.MarkDirty();
             NotifyTransactionChanged(this, coin.GetHash(), CT_UPDATED);
         }
-        CWalletTx& wtx = mapWallet[hash];
+
+        TxSpends::const_iterator iter = mapTxSpends.lower_bound(COutPoint(hash, 0));
+        while (iter != mapTxSpends.end() && iter->first.hash == hash) {
+            map<uint256, CWalletTx>::iterator it = mapWallet.find(iter->second);
+            if (it != mapWallet.end()) {
+                CWalletTx &coin = it->second;
+                coin.BindWallet(this);
+                coin.MarkDirty();
+                NotifyTransactionChanged(this, coin.GetHash(), CT_UPDATED);
+            }
+            iter++;
+        }
+
+        CWalletTx& wtx = mi->second;
         wtx.BindWallet(this);
+        wtx.MarkDirty();
         NotifyTransactionChanged(this, hash, CT_DELETED);
     }
 }
