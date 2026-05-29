@@ -3855,7 +3855,7 @@ bool SignBlock(CBlock& block, CWallet& wallet, int64_t& nFees)
                     txCoinBase.nTime = block.nTime = txCoinStake.nTime;
                 else {
                     block.nTime = txCoinStake.nTime;
-                    txCoinBase.nTime = txCoinStake.nTime = 0;
+                    txCoinBase.nTime = 0;
                 }
                 block.vtx[0] = txCoinBase;
 
