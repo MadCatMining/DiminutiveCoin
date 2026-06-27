@@ -58,6 +58,12 @@ public:
     void setModel(OptionsModel *model);
     void setInfo(const SendCoinsRecipient &info);
 
+    enum QrUriMode {
+        PaymentRequestUri,
+        DimiDepositUri,
+    };
+    void setQrUriMode(QrUriMode mode);
+
 private Q_SLOTS:
     void on_btnCopyURI_clicked();
     void on_btnCopyAddress_clicked();
@@ -69,6 +75,7 @@ private:
     OptionsModel *model;
     SendCoinsRecipient info;
     const Config *cfg;
+    QrUriMode qrUriMode;
 };
 
 // exported for unittesting

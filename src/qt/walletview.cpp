@@ -33,7 +33,8 @@ WalletView::WalletView(const PlatformStyle *_platformStyle, const Config *cfg, Q
     QStackedWidget(parent),
     clientModel(0),
     walletModel(0),
-    platformStyle(_platformStyle)
+    platformStyle(_platformStyle),
+    cfg(cfg)
 {
     // Create tabs
     overviewPage = new OverviewPage(platformStyle);
@@ -123,6 +124,7 @@ void WalletView::setWalletModel(WalletModel *walletModel)
     receiveCoinsPage->setModel(walletModel);
     sendCoinsPage->setModel(walletModel);
     usedReceivingAddressesPage->setModel(walletModel->getAddressTableModel());
+    usedReceivingAddressesPage->setReceiveDialogContext(cfg, walletModel ? walletModel->getOptionsModel() : nullptr);
     usedSendingAddressesPage->setModel(walletModel->getAddressTableModel());
 
     if (walletModel)

@@ -306,6 +306,11 @@ QString formatBitcoinURI(const Config &cfg, const SendCoinsRecipient &info)
     return ret;
 }
 
+QString formatDimiDepositURI(const QString &address)
+{
+    return QStringLiteral("dimi:%1").arg(address.trimmed());
+}
+
 bool isDust(const QString& address, const CAmount& amount)
 {
     CTxDestination dest = DecodeDestination(address.toStdString());
