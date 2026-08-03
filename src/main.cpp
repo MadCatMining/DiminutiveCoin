@@ -2486,9 +2486,22 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
     }
 
     // Check difficulty
-    if (block.nBits != GetNextTargetRequired(pindex->pprev, &block, chainparams.GetConsensus(), block.IsProofOfStake()))
-         return state.DoS(100, error("ConnectBlock(): incorrect difficulty"),
-                        REJECT_INVALID, "bad-diffbits");
+    unsigned int nBitsExpected = GetNextTargetRequired(pindex->pprev, &block, chainparams.GetConsensus(), block.IsProofOfStake());
+    if (block.nBits != nBitsExpected) {
+        // Diagnostic mode used to locate the height at which the proof-of-stake
+        // minimum-difficulty limit was reduced (see doc/pos-limit-reduction.md).
+        // Never enable this on a node whose chain you have not already validated:
+        // it accepts blocks with an arbitrary difficulty.
+        if (GetBoolArg("-scanposlimit", false)) {
+            LogPrintf("POSLIMIT-SCAN: height=%d hash=%s pos=%d nBits=%08x expected=%08x\n",
+                      pindex->nHeight, block.GetHash().ToString(), block.IsProofOfStake() ? 1 : 0,
+                      block.nBits, nBitsExpected);
+        } else {
+            return state.DoS(100, error("ConnectBlock(): incorrect difficulty (height=%d nBits=%08x expected=%08x)",
+                                        pindex->nHeight, block.nBits, nBitsExpected),
+                             REJECT_INVALID, "bad-diffbits");
+        }
+    }
 
     // Check proof-of-stake
     if (block.IsProofOfStake() && chainparams.GetConsensus().IsProtocolV3(block.GetBlockTime()) && !CheckProofOfStake(pindex->pprev, block.vtx[1], block.nBits, state, block.vtx[1].nTime ? block.vtx[1].nTime : block.nTime)) {

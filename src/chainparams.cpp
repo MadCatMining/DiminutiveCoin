@@ -13,6 +13,7 @@
 #include "utilstrencodings.h"
 
 #include <assert.h>
+#include <limits>
 
 #include <boost/assign/list_of.hpp>
 
@@ -93,7 +94,14 @@ public:
         consensus.nMajorityWindow = 1000;
         consensus.powLimit = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.posLimit = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
-        consensus.posLimitV2 = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+        // Original PoS limit, in force from genesis until the reduction below.
+        consensus.posLimitV2 = uint256S("000000000000ffffffffffffffffffffffffffffffffffffffffffffffffffff");
+        // Reduced PoS limit ("Reduced POS difficulty", July 2025).
+        consensus.posLimitV2Reduced = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+        // First mainnet height whose difficulty requires the reduced limit; below
+        // this, blocks were clamped to the original posLimitV2 and only validate
+        // against it. See doc/pos-limit-reduction.md.
+        consensus.nPosLimitV2ReducedHeight = 190927;
         consensus.nTargetTimespan = 16 * 60; // 16 mins
         consensus.nTargetSpacingV1 = 60;
         consensus.nTargetSpacing = 64;
@@ -192,6 +200,9 @@ public:
         consensus.powLimit = uint256S("0000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.posLimit = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.posLimitV2 = uint256S("000000000000ffffffffffffffffffffffffffffffffffffffffffffffffffff");
+        // Never reduced on this chain; keep the limit constant at every height.
+        consensus.posLimitV2Reduced = consensus.posLimitV2;
+        consensus.nPosLimitV2ReducedHeight = std::numeric_limits<int>::max();
         consensus.nTargetTimespan = 16 * 60; // 16 mins
         consensus.nTargetSpacingV1 = 60;
         consensus.nTargetSpacing = 60;
@@ -277,6 +288,9 @@ public:
         consensus.powLimit = uint256S("0000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.posLimit = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.posLimitV2 = uint256S("000000000000ffffffffffffffffffffffffffffffffffffffffffffffffffff");
+        // Never reduced on this chain; keep the limit constant at every height.
+        consensus.posLimitV2Reduced = consensus.posLimitV2;
+        consensus.nPosLimitV2ReducedHeight = std::numeric_limits<int>::max();
         consensus.nTargetTimespan = 16 * 60; // 16 mins
         consensus.nTargetSpacingV1 = 64;
         consensus.nTargetSpacing = 64;

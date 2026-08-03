@@ -12,12 +12,23 @@
 #include "util.h"
 #include <stdio.h>
 
-static arith_uint256 GetTargetLimit(int64_t nTime, const Consensus::Params& params, bool fProofOfStake)
+/**
+ * The minimum-difficulty limit for a block at height nHeight with timestamp nTime.
+ *
+ * nHeight must be the height of the block whose target is being computed, not the
+ * height of whatever index the caller happens to be walking back from: the PoS limit
+ * changes at a fixed height, and the two call sites below reference different blocks
+ * (the chain tip vs. the last block of the same type), which would otherwise pick
+ * different limits for blocks straddling the switch.
+ */
+static arith_uint256 GetTargetLimit(int nHeight, int64_t nTime, const Consensus::Params& params, bool fProofOfStake)
 {
     uint256 nLimit;
 
     if (fProofOfStake) {
-        if (params.IsProtocolV2(nTime))
+        if (nHeight >= params.nPosLimitV2ReducedHeight)
+            nLimit = params.posLimitV2Reduced;
+        else if (params.IsProtocolV2(nTime))
             nLimit = params.posLimitV2;
         else
             nLimit = params.posLimit;
@@ -34,8 +45,9 @@ unsigned int GetNextTargetRequired(const CBlockIndex* pindexLast, const CBlockHe
     if (pindexLast == NULL)
         return UintToArith256(params.powLimit).GetCompact();
 
+    const int nHeight = pindexLast->nHeight + 1;
     const CBlockIndex* pindexPrev = GetLastBlockIndex(pindexLast, fProofOfStake);
-    unsigned int nTargetLimit = GetTargetLimit(pindexLast->GetBlockTime(), params, fProofOfStake).GetCompact();
+    unsigned int nTargetLimit = GetTargetLimit(nHeight, pindexLast->GetBlockTime(), params, fProofOfStake).GetCompact();
 
     if (pindexPrev->pprev == NULL)
         return nTargetLimit; // first block
@@ -43,10 +55,10 @@ unsigned int GetNextTargetRequired(const CBlockIndex* pindexLast, const CBlockHe
     if (pindexPrevPrev->pprev == NULL)
         return nTargetLimit; // second block
 
-    return CalculateNextTargetRequired(pindexPrev, pindexPrevPrev->GetBlockTime(), params, fProofOfStake);
+    return CalculateNextTargetRequired(pindexPrev, pindexPrevPrev->GetBlockTime(), nHeight, params, fProofOfStake);
 }
 
-unsigned int CalculateNextTargetRequired(const CBlockIndex* pindexLast, int64_t nFirstBlockTime, const Consensus::Params& params, bool fProofOfStake)
+unsigned int CalculateNextTargetRequired(const CBlockIndex* pindexLast, int64_t nFirstBlockTime, int nHeight, const Consensus::Params& params, bool fProofOfStake)
 {
     if (fProofOfStake) {
         if (params.fPoSNoRetargeting)
@@ -66,7 +78,7 @@ unsigned int CalculateNextTargetRequired(const CBlockIndex* pindexLast, int64_t 
         nActualSpacing = nTargetSpacing*10;
 
     // retarget with exponential moving toward target spacing
-    const arith_uint256 bnTargetLimit = GetTargetLimit(pindexLast->GetBlockTime(), params, fProofOfStake);
+    const arith_uint256 bnTargetLimit = GetTargetLimit(nHeight, pindexLast->GetBlockTime(), params, fProofOfStake);
     arith_uint256 bnNew;
     bnNew.SetCompact(pindexLast->nBits);
     int64_t nInterval = params.nTargetTimespan / nTargetSpacing;
