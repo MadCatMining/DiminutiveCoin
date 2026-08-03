@@ -128,11 +128,23 @@ Known issues
 ============
 
 * **Coinstake transaction IDs are not guaranteed unique.** Transaction `nTime` is
-  not serialised for version 2 transactions and therefore does not contribute to
-  the transaction hash, so two staking attempts spending the same input with
-  identical outputs produce the same txid. Any fix must vary data that is
-  actually serialised. If you encounter duplicate-transaction or overwrite
-  errors, please open an issue with the exact log text.
+  not serialised for version 2 transactions, so it does not contribute to the
+  transaction hash. Two staking attempts spending the same inputs with the same
+  outputs therefore produce the same txid.
+
+  This is a quirk rather than an active fault. Its practical consequence was the
+  wallet accounting problem fixed in this release: the wallet indexes
+  transactions by txid, so an orphaned coinstake and a later re-mined one shared
+  a single entry. At the chain level the duplicate-transaction rule (BIP30) is
+  enforced on every block and cannot be triggered by this, because a coinstake
+  spends its own input — a duplicate can only be mined on a chain where the
+  original is absent, and there its outputs are not in the UTXO set. A full
+  revalidation of the chain to height 1100000 recorded no occurrences.
+
+  Making coinstake txids unique would mean changing the transactions the wallet
+  produces, which is not justified by any observed failure. If you do encounter
+  duplicate-transaction or overwrite errors, please open an issue with the exact
+  log text.
 
 * **The unit test suite does not build.** It was never adapted from the upstream
   Blackcoin More codebase. This does not affect the released binaries, which do
