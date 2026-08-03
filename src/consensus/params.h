@@ -56,6 +56,14 @@ struct Params {
     uint256 powLimit;
     uint256 posLimit;
     uint256 posLimitV2;
+    /**
+     * The proof-of-stake minimum-difficulty limit was reduced from posLimitV2 to
+     * posLimitV2Reduced at height nPosLimitV2ReducedHeight (mainnet, July 2025).
+     * Blocks below that height were clamped to the original posLimitV2, so both
+     * values have to be kept around for the chain to be reproducible on reindex.
+     */
+    uint256 posLimitV2Reduced;
+    int nPosLimitV2ReducedHeight;
     bool fPowAllowMinDifficultyBlocks;
     int64_t nTargetSpacingV1;
     bool fPowNoRetargeting;

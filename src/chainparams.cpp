@@ -13,6 +13,7 @@
 #include "utilstrencodings.h"
 
 #include <assert.h>
+#include <limits>
 
 #include <boost/assign/list_of.hpp>
 
@@ -93,7 +94,14 @@ public:
         consensus.nMajorityWindow = 1000;
         consensus.powLimit = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.posLimit = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
-        consensus.posLimitV2 = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+        // Original PoS limit, in force from genesis until the reduction below.
+        consensus.posLimitV2 = uint256S("000000000000ffffffffffffffffffffffffffffffffffffffffffffffffffff");
+        // Reduced PoS limit ("Reduced POS difficulty", July 2025).
+        consensus.posLimitV2Reduced = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+        // First mainnet height whose difficulty requires the reduced limit; below
+        // this, blocks were clamped to the original posLimitV2 and only validate
+        // against it. See doc/pos-limit-reduction.md.
+        consensus.nPosLimitV2ReducedHeight = 190927;
         consensus.nTargetTimespan = 16 * 60; // 16 mins
         consensus.nTargetSpacingV1 = 60;
         consensus.nTargetSpacing = 64;
@@ -117,7 +125,7 @@ public:
         consensus.nCoinbaseMaturity = 100;
 
         // The best chain should have at least this much work.
-        consensus.nMinimumChainWork = uint256S("0x00000000000000000000000000000000000000000000000000c9014d493f4dbb"); // block 43000
+        consensus.nMinimumChainWork = uint256S("0x0000000000000000000000000000000000000000000000000ef111c6cad5e9e9"); // block 1100000
 
         /**
          * The message start string is designed to be unlikely to occur in normal data.
@@ -157,19 +165,21 @@ public:
 
         checkpointData = (CCheckpointData) {
                     boost::assign::map_list_of
-                    (     0,  uint256S("0x0000051711c49b2374ba7c506cc089032492c618bb3a3227a39a2f392822785c"))   // Genesis
-                    ( 10000,  uint256S("0x0000004bfd794aca7e3d06d32f963aebb70094cd8c07c6ade1791d9fed2949c4"))
-                    ( 25000,  uint256S("0x0000001b6e343921dbcd23cbb60689ca8bb66e432e4a7a9274ecaeef38de1bbc"))
-                    ( 43000,  uint256S("0x00000194e94e2866697db61c27bfed119a2a910cc04fcb7e44248e1a9cffb777"))   // Pre-release checkpoint
-                    ( 100000, uint256S("0x000000003e0ffa69abd8cd4c2d7c3ddd9ed54188813a5666971786413d84d571"))
-                    ( 150000, uint256S("0x000000000391ab502559f2e0cb1d5b81c03e05f1afdad62d4b853ca4c62737e7"))
-                    ( 200000, uint256S("0x9e9586e78734519f5cd4c88afec2518f3dde8eabd7a85802d6abe8717980066e"))
-                    ( 240000, uint256S("0x0000000002cc5f2d1554a6bd19e538565ef0a0de1ac9172f4d34feeb3414cbe4"))  // Pre-RPC "time" fix checkpoint 
-                    ( 347130, uint256S("0x63db3a1b9f906a961a3adfb0234e3c063a7dc356f76e5ca598e0f851e564f454")),  // End of Swap from the old chain (21.09.2025) 
-                    1758465840,    // * UNIX timestamp of last checkpoint block
-                        438505,    // * total number of transactions between genesis and last checkpoint
+                    (       0, uint256S("0x0000051711c49b2374ba7c506cc089032492c618bb3a3227a39a2f392822785c"))  // Genesis
+                    (   10000, uint256S("0x0000004bfd794aca7e3d06d32f963aebb70094cd8c07c6ade1791d9fed2949c4"))
+                    (   25000, uint256S("0x0000001b6e343921dbcd23cbb60689ca8bb66e432e4a7a9274ecaeef38de1bbc"))
+                    (   43000, uint256S("0x00000194e94e2866697db61c27bfed119a2a910cc04fcb7e44248e1a9cffb777"))  // Pre-release checkpoint
+                    (  100000, uint256S("0x000000003e0ffa69abd8cd4c2d7c3ddd9ed54188813a5666971786413d84d571"))
+                    (  150000, uint256S("0x000000000391ab502559f2e0cb1d5b81c03e05f1afdad62d4b853ca4c62737e7"))
+                    (  190927, uint256S("0x7e907a0d1d47bbfecd30e34edf77f545b0d2334156dbdaf8748c300ed63ebf09"))  // First block using the reduced PoS limit (14.07.2025)
+                    (  200000, uint256S("0x9e9586e78734519f5cd4c88afec2518f3dde8eabd7a85802d6abe8717980066e"))
+                    (  240000, uint256S("0x0000000002cc5f2d1554a6bd19e538565ef0a0de1ac9172f4d34feeb3414cbe4"))  // Pre-RPC "time" fix checkpoint
+                    (  347130, uint256S("0x63db3a1b9f906a961a3adfb0234e3c063a7dc356f76e5ca598e0f851e564f454"))  // End of Swap from the old chain (21.09.2025)
+                    ( 1100000, uint256S("0x00000000014bb22ff6d1e737430e7bafb97926585c454c6ac49ef92eebd4480e")),
+                    1785531253,    // * UNIX timestamp of last checkpoint block
+                       1571507,    // * total number of transactions between genesis and last checkpoint
                                    //   (the tx=... number in the SetBestChain debug.log lines)
-                        1200.0     // * estimated number of transactions per day after checkpoint
+                        3616.8     // * estimated number of transactions per day after checkpoint
         };
 
         // A vector of p2sh addresses
@@ -192,6 +202,9 @@ public:
         consensus.powLimit = uint256S("0000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.posLimit = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.posLimitV2 = uint256S("000000000000ffffffffffffffffffffffffffffffffffffffffffffffffffff");
+        // Never reduced on this chain; keep the limit constant at every height.
+        consensus.posLimitV2Reduced = consensus.posLimitV2;
+        consensus.nPosLimitV2ReducedHeight = std::numeric_limits<int>::max();
         consensus.nTargetTimespan = 16 * 60; // 16 mins
         consensus.nTargetSpacingV1 = 60;
         consensus.nTargetSpacing = 60;
@@ -277,6 +290,9 @@ public:
         consensus.powLimit = uint256S("0000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.posLimit = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.posLimitV2 = uint256S("000000000000ffffffffffffffffffffffffffffffffffffffffffffffffffff");
+        // Never reduced on this chain; keep the limit constant at every height.
+        consensus.posLimitV2Reduced = consensus.posLimitV2;
+        consensus.nPosLimitV2ReducedHeight = std::numeric_limits<int>::max();
         consensus.nTargetTimespan = 16 * 60; // 16 mins
         consensus.nTargetSpacingV1 = 64;
         consensus.nTargetSpacing = 64;
