@@ -22,7 +22,13 @@ static const int CANONICAL_BLOCK_SIG_VERSION = 60016;
 static const int CANONICAL_BLOCK_SIG_LOW_S_VERSION = 60018;
 
 //! disconnect from peers older than this proto version
-static const int MIN_PEER_PROTO_VERSION = 70017;
+//! Deliberately left at 70016 for the 70017 (13.2.0) release. The PoS limit
+//! change in 13.2.0 only alters validation of blocks below height 190927, and
+//! the chain is far past that, so 13.1.x and 13.2.0 nodes compute identical
+//! difficulty for every new block and interoperate normally. 13.1.x simply
+//! cannot reindex or sync from scratch. Do not raise this without an actual
+//! divergence in the rules applied to new blocks.
+static const int MIN_PEER_PROTO_VERSION = 70016;
 
 //! nTime field added to CAddress, starting with this version;
 //! if possible, avoid requesting addresses nodes older than this

@@ -93,6 +93,26 @@ first block using the reduced one, so a synced node can find it over RPC without
 the diagnostic build — scan `getblockheader` in the region around 2025-07-13 for
 the transition from `bits: "1b00ffff"` to `bits: "1e0fffff"`.
 
+## Network compatibility
+
+This is **not** a fork of the rules applied to new blocks, and no coordinated
+upgrade is required.
+
+Pre-13.2.0 code applies the reduced limit at every height. 13.2.0 applies it at
+every height at or above `nPosLimitV2ReducedHeight` (190927). The chain passed
+that height in July 2025, so for every block mined from then on the two versions
+compute **identical** difficulty and interoperate normally — staking, relay and
+mining are unaffected.
+
+The versions differ only when re-validating history *below* 190927, which
+happens during a reindex or a sync from scratch. A 13.1.x node keeps following
+the chain it already has; it just cannot rebuild its index.
+
+`MIN_PEER_PROTO_VERSION` is therefore deliberately left at 70016 while
+`PROTOCOL_VERSION` advertises 70017. Raising the minimum would disconnect peers
+that are fully compatible, partitioning the network for no consensus benefit.
+Raise it only when new blocks are actually validated differently.
+
 ## Other networks
 
 Testnet and regtest never received the reduction; they set
