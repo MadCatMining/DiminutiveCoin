@@ -1888,6 +1888,34 @@ static void AlertNotify(const std::string& strMessage)
     boost::thread t(runCommand, strCmd); // thread runs free
 }
 
+/**
+ * Work contained in the nBlocks main-chain blocks ending at pindex.
+ *
+ * The fork warnings below are inherited from Bitcoin, where every block carries
+ * roughly the same work and "n blocks of work" can be approximated by the proof
+ * of a single block times n. That does not hold on a hybrid proof-of-work /
+ * proof-of-stake chain: the two block types run at completely independent
+ * difficulties, and a single stake block can be worth a thousand work blocks or
+ * more. Using one block as the yardstick therefore made the thresholds wildly
+ * sensitive whenever the reference block happened to be the cheaper type, and a
+ * single competing stake block was enough to be reported as a large-work fork.
+ *
+ * Measuring a real span of the chain instead is self-normalising, since the span
+ * contains both block types in whatever proportion the chain is actually
+ * producing them.
+ */
+static arith_uint256 GetRecentChainWork(const CBlockIndex* pindex, int nBlocks)
+{
+    if (pindex == NULL)
+        return arith_uint256(0);
+
+    const CBlockIndex* pstart = pindex->GetAncestor(std::max(0, pindex->nHeight - nBlocks));
+    if (pstart == NULL || pstart->nChainWork > pindex->nChainWork)
+        return GetBlockProof(*pindex) * nBlocks; // degenerate; fall back to the old estimate
+
+    return pindex->nChainWork - pstart->nChainWork;
+}
+
 void CheckForkWarningConditions()
 {
     AssertLockHeld(cs_main);
@@ -1901,7 +1929,7 @@ void CheckForkWarningConditions()
     if (pindexBestForkTip && chainActive.Height() - pindexBestForkTip->nHeight >= 72)
         pindexBestForkTip = NULL;
 
-    if (pindexBestForkTip || (pindexBestInvalid && pindexBestInvalid->nChainWork > chainActive.Tip()->nChainWork + (GetBlockProof(*chainActive.Tip()) * 6)))
+    if (pindexBestForkTip || (pindexBestInvalid && pindexBestInvalid->nChainWork > chainActive.Tip()->nChainWork + GetRecentChainWork(chainActive.Tip(), 6)))
     {
         if (!fLargeWorkForkFound && pindexBestForkBase)
         {
@@ -1951,8 +1979,15 @@ void CheckForkWarningConditionsOnNewFork(CBlockIndex* pindexNewForkTip)
     // or a chain that is entirely longer than ours and invalid (note that this should be detected by both)
     // We define it this way because it allows us to only store the highest fork tip (+ base) which meets
     // the 7-block condition and from this always have the most-likely-to-cause-warning fork
+    //
+    // The fork must be at least 7 blocks long as well as carry more work than the 7
+    // main-chain blocks it forked from. On a hybrid chain the work test alone is not
+    // enough: a lone competing stake block forking off a work block clears any
+    // work-only threshold by orders of magnitude, and that is ordinary stake
+    // competition rather than anything worth warning about.
     if (pfork && (!pindexBestForkTip || (pindexBestForkTip && pindexNewForkTip->nHeight > pindexBestForkTip->nHeight)) &&
-            pindexNewForkTip->nChainWork - pfork->nChainWork > (GetBlockProof(*pfork) * 7) &&
+            pindexNewForkTip->nHeight - pfork->nHeight >= 7 &&
+            pindexNewForkTip->nChainWork - pfork->nChainWork > GetRecentChainWork(pfork, 7) &&
             chainActive.Height() - pindexNewForkTip->nHeight < 72)
     {
         pindexBestForkTip = pindexNewForkTip;

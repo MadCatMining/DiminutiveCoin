@@ -102,6 +102,29 @@ inserted into the wallet.
 
 Thanks to **dtd-tosh** for finding and fixing this.
 
+Fixed: spurious "the network does not appear to fully agree" warning
+--------------------------------------------------------------------
+
+Wallets have long shown this popup during normal operation:
+
+    Warning: The network does not appear to fully agree!
+    Some miners appear to be experiencing issues.
+
+It was a false alarm. The check behind it is inherited from Bitcoin, where every
+block carries roughly the same amount of work, so "a fork worth 7 blocks" can be
+estimated as one block's work multiplied by seven. On a hybrid proof-of-work /
+proof-of-stake chain that assumption does not hold — the two block types run at
+independent difficulties, and a stake block can be worth well over a thousand
+work blocks.
+
+The result was that a single competing stake block, which is ordinary stake
+competition and entirely harmless, could exceed the threshold by a factor of
+several hundred and be reported as a large-work fork.
+
+The check now measures a real span of the chain, which contains both block types
+in their natural proportion, and additionally requires a fork to actually be
+seven blocks long. Genuine large forks are still reported.
+
 Updated checkpoints and minimum chain work
 -------------------------------------------
 
