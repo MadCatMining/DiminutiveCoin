@@ -541,9 +541,20 @@ bool CWallet::IsSpent(const uint256& hash, unsigned int n) const
 
 void CWallet::AddToSpends(const COutPoint& outpoint, const uint256& wtxid)
 {
+    pair<TxSpends::iterator, TxSpends::iterator> range;
+
+    // Idempotent. DisableTransaction() drops a coinstake's spends when its block
+    // is disconnected, and the same transaction is added again when a block
+    // containing it reconnects, so this can legitimately be called more than once
+    // for the same pair. mapTxSpends is a multimap and would otherwise accumulate
+    // duplicates.
+    range = mapTxSpends.equal_range(outpoint);
+    for (TxSpends::iterator it = range.first; it != range.second; ++it)
+        if (it->second == wtxid)
+            return;
+
     mapTxSpends.insert(make_pair(outpoint, wtxid));
 
-    pair<TxSpends::iterator, TxSpends::iterator> range;
     range = mapTxSpends.equal_range(outpoint);
     SyncMetaData(range);
 }
@@ -1177,6 +1188,15 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn, bool fFromLoadWallet, CWalletD
         bool fUpdated = false;
         if (!fInsertedNew)
         {
+            // Restore this transaction's spends. They are only registered above
+            // when the entry is first inserted, but DisableTransaction() removes
+            // them when a coinstake is disconnected. A transaction that is later
+            // confirmed again takes this merge path, and without re-registering
+            // them its inputs would stay marked unspent: the wallet would then
+            // count the staked coins both as available balance and as stake,
+            // inflating the total until a restart rebuilt mapTxSpends from disk.
+            AddToSpends(hash);
+
             // Merge
             if (!wtxIn.hashUnset() && wtxIn.hashBlock != wtx.hashBlock)
             {
