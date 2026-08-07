@@ -101,7 +101,14 @@ public:
         vout = tx.vout;
         nHeight = nHeightIn;
         nVersion = tx.nVersion;
-        nTime = tx.nTime;
+        // Only version 1 transactions carry nTime through serialization, both
+        // here (see Serialize/Unserialize below) and in CTransaction itself.
+        // A version 2 transaction read back from disk or from the network
+        // always has nTime == 0, but one constructed in memory does not:
+        // CMutableTransaction defaults nTime to GetAdjustedTime(). Copying it
+        // unconditionally would make a cache entry that no reload can
+        // reproduce, and operator== compares nTime.
+        nTime = tx.nVersion < 2 ? tx.nTime : 0;
         ClearUnspendable();
     }
 
