@@ -3,36 +3,50 @@ base: core22
 adopt-info: diminutivecoin
 license: MIT
 icon: snap/gui/icon.png
-summary: Diminutivecoin node, wallet and command line tools
+summary: Hybrid PoW/PoS cryptocurrency - wallet, full node and staking client
 description: |
   Diminutivecoin is a decentralised digital currency with near-instant
-  transaction speeds and negligible transaction fees, built on Proof of Stake
-  3.1 (PoSV3, BPoS) as introduced by the Blackcoin development team.
+  transactions and negligible fees. It secures its chain with a hybrid of
+  proof-of-work mining and Proof of Stake 3.1 (PoSV3), the staking design
+  introduced by the Blackcoin developers, and is built on Bitcoin Core 0.13.2
+  with patches from later releases.
 
-  This snap contains the full node daemon, the Qt desktop wallet and the
-  command line utilities:
+  Leave a balance in an unlocked wallet and it stakes - earning rewards on a
+  few watts rather than a few hundred, with no dedicated hardware.
 
-    * diminutivecoin.qt      - desktop wallet (also in the applications menu)
-    * diminutivecoin.daemon  - full node daemon, installed disabled
-    * diminutivecoin.cli     - JSON-RPC client
-    * diminutivecoin.tx      - transaction utility
+  **What's included**
 
-  The daemon is installed as a disabled service so that it does not start
-  before you have had a chance to configure it. Enable it with:
+  * `diminutivecoin.qt` - the desktop wallet, also in your applications menu
+  * `diminutivecoin.daemon` - background full node, run as a service
+  * `diminutivecoin.cli` - JSON-RPC client for scripting and automation
+  * `diminutivecoin.tx` - transaction utility
 
-    sudo snap start --enable diminutivecoin.daemon
+  **Running the node in the background**
 
-  IMPORTANT - where your wallet file is kept:
+  The daemon is installed disabled, so nothing starts syncing until you ask:
 
-    ~/snap/diminutivecoin/current/.diminutivecoin
+      sudo snap start --enable diminutivecoin.daemon
+      sudo snap logs -f diminutivecoin.daemon
 
-  Snap packages keep their files in their own folder, so this is not the
-  usual ~/.diminutivecoin. Your wallet is wallet.dat inside that folder -
-  that is the file to back up. Press Ctrl+H in the file manager to show
-  hidden folders.
+  **Where your wallet file is kept**
 
-  If you already run Diminutivecoin from the downloaded release, this snap
-  starts a fresh, separate node and does not see your existing wallet.
+      ~/snap/diminutivecoin/current/.diminutivecoin
+
+  Snap packages keep their files in their own folder, so this is not the usual
+  ~/.diminutivecoin. Your wallet is `wallet.dat` inside that folder - that is
+  the file to back up. Press Ctrl+H in the file manager to show hidden folders.
+
+  If you already run Diminutivecoin from the downloaded release, this snap is a
+  separate node: it syncs its own copy of the chain and will not see your
+  existing wallet.
+
+  **First run**
+
+  The wallet downloads and verifies the full chain before your balance is
+  accurate. Leave it running until it reports being in sync.
+
+  Website: https://diminutivecoin.com
+  Source and issues: https://github.com/MadCatMining/DiminutiveCoin
 
 grade: stable
 confinement: strict
