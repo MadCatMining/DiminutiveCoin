@@ -183,3 +183,9 @@ src/qt/diminutivecoin-qt.creator
 src/qt/diminutivecoin-qt.creator.user
 src/qt/diminutivecoin-qt.files
 src/qt/diminutivecoin-qt.includes
+
+# Snap build output
+/parts/
+/stage/
+/prime/
+*.snap
