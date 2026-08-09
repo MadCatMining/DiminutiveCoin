@@ -45,63 +45,39 @@ sudo snap logs -f diminutivecoin.daemon
 
 ## Data directory
 
-The snap uses the standard `~/.diminutivecoin`, so an existing node is picked
-up as-is and nothing has to be moved.
+A strictly confined snap gets its own `HOME`, so the data directory is
 
-That is not what a snap does by default, and it takes two pieces to arrange.
-
-**Confinement gives the snap its own `HOME`.** A strictly confined app runs
-with `HOME=$SNAP_USER_DATA`, so the built-in default would resolve to
-`~/snap/diminutivecoin/current/.diminutivecoin`. `bin/diminutivecoin-launcher`
-therefore passes `-datadir` explicitly, pointing at `$SNAP_REAL_HOME`. It does
-*not* reassign `HOME`, which would drag Qt's own config and cache out of the
-snap along with it. An explicit `-datadir` on the command line always wins.
-
-**The `home` interface does not cover dot-directories.** Its AppArmor profile
-grants `@{HOME}/[^.]**`, so `~/.diminutivecoin` is excluded no matter what
-path is passed. Access comes from a `personal-files` plug instead, which snapd
-does not connect automatically:
-
-```bash
-sudo snap connect diminutivecoin:dot-diminutivecoin
+```
+~/snap/diminutivecoin/current/.diminutivecoin
 ```
 
-Until that is connected every access is denied, so the launcher tests the
-directory first and falls back to the snap's private one with an explanatory
-message rather than failing to start. If the wallet looks empty on first run,
-this is why.
-
-Auto-connection requires a snap declaration granted by the Snap Store — see
-*Publishing* below.
-
-### The daemon service
-
-`diminutivecoin.daemon` runs as root, so its `$HOME` is `/root` and its data
-directory is `/root/.diminutivecoin`. The `personal-files` rule covers this,
-since it is written against `$HOME` rather than a fixed path.
-
-This is deliberately not the desktop user's directory: two nodes sharing one
-data directory would corrupt it, and the service has no way to know which user
-owns the wallet. To point the service somewhere else, put a `datadir=` line in
-`/root/.diminutivecoin/diminutivecoin.conf`, or run the foreground command
-`diminutivecoin.diminutivecoind -datadir=...` instead of the service.
-
-### Keeping the chain elsewhere
-
-Any path the `home` or `removable-media` interfaces reach works:
+not `~/.diminutivecoin`. To carry an existing node across, stop everything
+first and then move it:
 
 ```bash
-diminutivecoin.diminutivecoind -datadir=/path/to/chain
+mkdir -p ~/snap/diminutivecoin/current
+mv ~/.diminutivecoin ~/snap/diminutivecoin/current/.diminutivecoin
 ```
 
-`home` is connected automatically; `removable-media` is not:
+Note that `~/snap/diminutivecoin/current` is a symlink to a revision
+directory. Snapd copies the current revision's data forward on refresh, which
+for a full chain is slow and doubles the disk use. A node with a large data
+directory is better off keeping it outside the snap tree and pointing at it:
+
+```bash
+diminutivecoin.daemon -datadir=/path/to/chain
+```
+
+The `home` and `removable-media` interfaces are plugged for this. `home` is
+connected automatically; `removable-media` is not:
 
 ```bash
 sudo snap connect diminutivecoin:removable-media
 ```
 
-Note that these interfaces still exclude dot-directories, so an explicit
-`-datadir` should not be a hidden path directly under `$HOME`.
+Note that the `home` interface does not cover hidden directories in `$HOME` on
+recent snapd versions, which is the other reason a relocated data directory
+should not be a dotted path directly under `$HOME`.
 
 ## Berkeley DB
 
@@ -126,16 +102,3 @@ snapcraft upload --release=stable diminutivecoin_13.2.1_amd64.snap
 The version is taken from `git describe --tags`, falling back to the version
 macros in `configure.ac` when the tree has no tags — so build from a tagged
 checkout for a release upload.
-
-### Auto-connecting `dot-diminutivecoin`
-
-`personal-files` is never auto-connected on installation without a snap
-declaration, which is granted per-snap by the store reviewers. Until one is in
-place every user has to run `snap connect` by hand after installing.
-
-To request it, open a thread under *store-requests* on
-<https://forum.snapcraft.io/> naming the snap and the interface, and explain
-why the path is needed — here, that it is the established data directory of an
-existing wallet and users upgrading from a tarball or `.deb` install already
-have a populated `~/.diminutivecoin`. Requests for a snap's own conventional
-dot-directory are routine.

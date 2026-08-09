@@ -22,13 +22,10 @@ description: |
 
     sudo snap start --enable diminutivecoin.daemon
 
-  The data directory is the usual ~/.diminutivecoin, so an existing node is
-  picked up as-is. This needs one interface that snapd does not connect
-  automatically:
-
-    sudo snap connect diminutivecoin:dot-diminutivecoin
-
-  Without it the snap falls back to its own private directory and says so.
+  Because the snap is strictly confined, the data directory lives under
+  ~/snap/diminutivecoin/current/.diminutivecoin rather than
+  ~/.diminutivecoin. An existing data directory can be moved or symlinked
+  there. See contrib/snap/README.md in the source tree for details.
 
 grade: stable
 confinement: strict
@@ -37,19 +34,9 @@ compression: lzo
 architectures:
   - build-on: [amd64]
 
-# Confinement hides dot-directories in the real home from the `home`
-# interface, so reaching ~/.diminutivecoin needs an explicit personal-files
-# plug. It is not auto-connected without a store declaration; the launcher
-# detects that and falls back rather than failing to start.
-plugs:
-  dot-diminutivecoin:
-    interface: personal-files
-    write:
-      - $HOME/.diminutivecoin
-
 apps:
   qt:
-    command: bin/diminutivecoin-launcher diminutivecoin-qt
+    command: bin/diminutivecoin-qt
     desktop: usr/share/applications/diminutivecoin-qt.desktop
     extensions: [kde-neon]
     plugs:
@@ -57,7 +44,6 @@ apps:
       - network-bind
       - home
       - removable-media
-      - dot-diminutivecoin
       - desktop
       - desktop-legacy
       - wayland
@@ -66,7 +52,7 @@ apps:
       - opengl
 
   daemon:
-    command: bin/diminutivecoin-launcher diminutivecoind
+    command: bin/diminutivecoind
     daemon: simple
     # Installed disabled: starting a node before the user has written a
     # diminutivecoin.conf would sync the whole chain unannounced.
@@ -77,29 +63,24 @@ apps:
       - network-bind
       - home
       - removable-media
-      - dot-diminutivecoin
 
   diminutivecoind:
-    command: bin/diminutivecoin-launcher diminutivecoind
+    command: bin/diminutivecoind
     plugs:
       - network
       - network-bind
       - home
       - removable-media
-      - dot-diminutivecoin
 
   cli:
-    command: bin/diminutivecoin-launcher diminutivecoin-cli
+    command: bin/diminutivecoin-cli
     plugs:
       - network
       - home
       - removable-media
-      - dot-diminutivecoin
 
-  # Not routed through the launcher: diminutivecoin-tx operates on hex on the
-  # command line and never touches a data directory.
   tx:
-    command: usr/bin/diminutivecoin-tx
+    command: bin/diminutivecoin-tx
     plugs:
       - home
       - removable-media
@@ -196,6 +177,12 @@ parts:
         BDB_CFLAGS="-I$CRAFT_STAGE/usr/include"
       make -j"$CRAFT_PARALLEL_BUILD_COUNT"
       make install DESTDIR="$CRAFT_PART_INSTALL"
+      # Binaries are installed under /usr/bin; the app commands above expect
+      # bin/, which snapd resolves against $SNAP.
+      mkdir -p "$CRAFT_PART_INSTALL/bin"
+      for b in diminutivecoind diminutivecoin-cli diminutivecoin-tx diminutivecoin-qt; do
+        ln -sf ../usr/bin/"$b" "$CRAFT_PART_INSTALL/bin/$b"
+      done
       # The build does not install the icons, so place them by hand for the
       # Icon= entry in the desktop file.
       for size in 16 32 64 128 256; do
@@ -209,10 +196,5 @@ parts:
     source: contrib/snap
     organize:
       diminutivecoin-qt.desktop: usr/share/applications/diminutivecoin-qt.desktop
-      diminutivecoin-launcher: bin/diminutivecoin-launcher
-    override-build: |
-      craftctl default
-      chmod 755 "$CRAFT_PART_INSTALL/diminutivecoin-launcher"
     prime:
       - usr/share/applications/*
-      - bin/diminutivecoin-launcher
