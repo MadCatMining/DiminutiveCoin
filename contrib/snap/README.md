@@ -92,6 +92,30 @@ is not:
 sudo snap connect diminutivecoin:removable-media
 ```
 
+## Architectures
+
+`amd64` and `arm64` are built. Snapcraft builds each one natively, so a local
+`snapcraft` run produces a snap for whatever machine you run it on; the store's
+build service covers both when the source is attached to it.
+
+Nothing in the source is x86-specific. The x86 intrinsic paths all guard
+themselves:
+
+* `crypto/sha256_sse4.cpp` is wrapped in `#if defined(__x86_64__)`, and nothing
+  references `sha256_sse4::Transform` in any case.
+* `crypto/scrypt-sse2.cpp` is wrapped in `#if defined(USE_SSE2)`, and
+  `--enable-sse2` is off by default.
+* The SSE4.1, AVX2 and SHA-NI objects are gated by `AX_CHECK_COMPILE_FLAG`
+  probes in `configure.ac`, which fail on non-x86 and leave those parts out.
+
+`configure.ac` also carries an ARM CRC path (`-march=armv8-a+crc+crypto`,
+`arm_acle.h` / `arm_neon.h`), so aarch64 is a supported target upstream rather
+than an accident.
+
+`armhf`, `ppc64el`, `s390x` and `riscv64` are all plausible and none are
+listed, because none have been built and run. Add a `build-on` entry once one
+has been.
+
 ## Berkeley DB
 
 The wallet is built against Berkeley DB 6.2.38, built from source as its own

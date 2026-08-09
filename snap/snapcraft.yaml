@@ -38,8 +38,15 @@ grade: stable
 confinement: strict
 compression: lzo
 
+# The source is architecture-clean: every x86 intrinsic path is guarded
+# (crypto/sha256_sse4.cpp on __x86_64__, crypto/scrypt-sse2.cpp on USE_SSE2,
+# which is off by default), and the SSE4.1/AVX2/SHA-NI objects are gated by
+# compile-flag probes that simply fail elsewhere. configure.ac carries an
+# ARM CRC path of its own. Other architectures should build unchanged - add
+# them here once one has actually been built and run.
 architectures:
   - build-on: [amd64]
+  - build-on: [arm64]
 
 apps:
   qt:
