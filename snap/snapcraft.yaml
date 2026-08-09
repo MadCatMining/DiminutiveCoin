@@ -22,10 +22,17 @@ description: |
 
     sudo snap start --enable diminutivecoin.daemon
 
-  Because the snap is strictly confined, the data directory lives under
-  ~/snap/diminutivecoin/current/.diminutivecoin rather than
-  ~/.diminutivecoin. An existing data directory can be moved or symlinked
-  there. See contrib/snap/README.md in the source tree for details.
+  IMPORTANT - where your wallet file is kept:
+
+    ~/snap/diminutivecoin/current/.diminutivecoin
+
+  Snap packages keep their files in their own folder, so this is not the
+  usual ~/.diminutivecoin. Your wallet is wallet.dat inside that folder -
+  that is the file to back up. Press Ctrl+H in the file manager to show
+  hidden folders.
+
+  If you already run Diminutivecoin from the downloaded release, this snap
+  starts a fresh, separate node and does not see your existing wallet.
 
 grade: stable
 confinement: strict

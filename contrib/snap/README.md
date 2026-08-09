@@ -45,39 +45,52 @@ sudo snap logs -f diminutivecoin.daemon
 
 ## Data directory
 
-A strictly confined snap gets its own `HOME`, so the data directory is
+A strictly confined snap runs with `HOME` set to its own directory, so the
+data directory is
 
 ```
 ~/snap/diminutivecoin/current/.diminutivecoin
 ```
 
-not `~/.diminutivecoin`. To carry an existing node across, stop everything
-first and then move it:
+not `~/.diminutivecoin`. **The wallet file to back up is `wallet.dat` inside
+that folder.**
+
+This is left at the snap default on purpose. Pointing the snap at the usual
+`~/.diminutivecoin` is possible but not free: the `home` interface grants
+`@{HOME}/[^.]**`, so hidden directories in the real home are excluded from it,
+and reaching one needs a `personal-files` plug that snapd will not connect
+without a store declaration. That means either a manual `snap connect` step on
+every install or a forum request. Not worth it for a package with a handful of
+downloads a month.
+
+The consequence is that the snap is a **separate node** from an existing
+tarball install — it syncs its own copy of the chain and does not see an
+existing wallet. Anyone with a node already running is better served by the
+release binaries.
+
+To move an existing node in anyway, stop everything first:
 
 ```bash
-mkdir -p ~/snap/diminutivecoin/current
 mv ~/.diminutivecoin ~/snap/diminutivecoin/current/.diminutivecoin
 ```
 
 Note that `~/snap/diminutivecoin/current` is a symlink to a revision
-directory. Snapd copies the current revision's data forward on refresh, which
-for a full chain is slow and doubles the disk use. A node with a large data
-directory is better off keeping it outside the snap tree and pointing at it:
+directory, and snapd copies the current revision's data forward on every
+refresh — for a full chain that is slow and briefly doubles the disk use.
+
+To keep the chain somewhere else entirely:
 
 ```bash
-diminutivecoin.daemon -datadir=/path/to/chain
+diminutivecoin.diminutivecoind -datadir=/path/to/chain
 ```
 
-The `home` and `removable-media` interfaces are plugged for this. `home` is
-connected automatically; `removable-media` is not:
+Any path reachable through `home` or `removable-media` works, as long as it is
+not a hidden directory. `home` is connected automatically; `removable-media`
+is not:
 
 ```bash
 sudo snap connect diminutivecoin:removable-media
 ```
-
-Note that the `home` interface does not cover hidden directories in `$HOME` on
-recent snapd versions, which is the other reason a relocated data directory
-should not be a dotted path directly under `$HOME`.
 
 ## Berkeley DB
 
