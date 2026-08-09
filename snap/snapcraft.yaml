@@ -1,0 +1,200 @@
+name: diminutivecoin
+base: core22
+adopt-info: diminutivecoin
+license: MIT
+icon: snap/gui/icon.png
+summary: Diminutivecoin node, wallet and command line tools
+description: |
+  Diminutivecoin is a decentralised digital currency with near-instant
+  transaction speeds and negligible transaction fees, built on Proof of Stake
+  3.1 (PoSV3, BPoS) as introduced by the Blackcoin development team.
+
+  This snap contains the full node daemon, the Qt desktop wallet and the
+  command line utilities:
+
+    * diminutivecoin.qt      - desktop wallet (also in the applications menu)
+    * diminutivecoin.daemon  - full node daemon, installed disabled
+    * diminutivecoin.cli     - JSON-RPC client
+    * diminutivecoin.tx      - transaction utility
+
+  The daemon is installed as a disabled service so that it does not start
+  before you have had a chance to configure it. Enable it with:
+
+    sudo snap start --enable diminutivecoin.daemon
+
+  Because the snap is strictly confined, the data directory lives under
+  ~/snap/diminutivecoin/current/.diminutivecoin rather than
+  ~/.diminutivecoin. An existing data directory can be moved or symlinked
+  there. See contrib/snap/README.md in the source tree for details.
+
+grade: stable
+confinement: strict
+compression: lzo
+
+architectures:
+  - build-on: [amd64]
+
+apps:
+  qt:
+    command: bin/diminutivecoin-qt
+    desktop: usr/share/applications/diminutivecoin-qt.desktop
+    extensions: [kde-neon]
+    plugs:
+      - network
+      - network-bind
+      - home
+      - removable-media
+      - desktop
+      - desktop-legacy
+      - wayland
+      - x11
+      - unity7
+      - opengl
+
+  daemon:
+    command: bin/diminutivecoind
+    daemon: simple
+    # Installed disabled: starting a node before the user has written a
+    # diminutivecoin.conf would sync the whole chain unannounced.
+    install-mode: disable
+    restart-condition: always
+    plugs:
+      - network
+      - network-bind
+      - home
+      - removable-media
+
+  diminutivecoind:
+    command: bin/diminutivecoind
+    plugs:
+      - network
+      - network-bind
+      - home
+      - removable-media
+
+  cli:
+    command: bin/diminutivecoin-cli
+    plugs:
+      - network
+      - home
+      - removable-media
+
+  tx:
+    command: bin/diminutivecoin-tx
+    plugs:
+      - home
+      - removable-media
+
+parts:
+  # Berkeley DB 6.2 is not packaged by Ubuntu, and the version matters: a
+  # wallet written by a build linked against a different BDB is not portable
+  # to the released binaries. Version and hash are kept in step with
+  # depends/packages/bdb.mk.
+  bdb:
+    plugin: nil
+    source: https://source.ipfire.org/source-2.x/db-6.2.38.tar.gz
+    source-checksum: sha256/99ccd944ffcccc88c0f404b4f3d8cb10747e1e3dfe9ec566f518725f986ca2fd
+    build-packages:
+      - g++
+      - make
+    override-build: |
+      cd build_unix
+      ../dist/configure \
+        --prefix=/usr \
+        --enable-cxx \
+        --disable-shared \
+        --disable-replication \
+        --with-pic \
+        CFLAGS="-Wno-error=implicit-function-declaration" \
+        CXXFLAGS="-std=c++17"
+      make -j"$CRAFT_PARALLEL_BUILD_COUNT" libdb_cxx-6.2.a libdb-6.2.a
+      make install_include install_lib DESTDIR="$CRAFT_PART_INSTALL"
+    prime:
+      # Static only; nothing from this part belongs in the payload.
+      - -*
+
+  diminutivecoin:
+    plugin: nil
+    source: .
+    after: [bdb]
+    build-packages:
+      - autoconf
+      - automake
+      - build-essential
+      - libboost-chrono-dev
+      - libboost-filesystem-dev
+      - libboost-program-options-dev
+      - libboost-random-dev
+      - libboost-system-dev
+      - libboost-thread-dev
+      - libevent-dev
+      - libminiupnpc-dev
+      - libprotobuf-dev
+      - libqrencode-dev
+      - libssl-dev
+      - libtool
+      - libzmq3-dev
+      - pkg-config
+      - protobuf-compiler
+      - qtbase5-dev
+      - qttools5-dev
+      - qttools5-dev-tools
+    stage-packages:
+      - libboost-chrono1.74.0
+      - libboost-filesystem1.74.0
+      - libboost-program-options1.74.0
+      - libboost-random1.74.0
+      - libboost-system1.74.0
+      - libboost-thread1.74.0
+      - libevent-2.1-7
+      - libevent-pthreads-2.1-7
+      - libminiupnpc17
+      - libprotobuf23
+      - libqrencode4
+      - libssl3
+      - libzmq5
+    override-pull: |
+      craftctl default
+      # Track the tag the tree was built from, so a store upload is labelled
+      # with the release it actually contains.
+      version="$(git describe --tags --abbrev=0 2>/dev/null | sed 's/^v//')"
+      if [ -z "$version" ]; then
+        version="$(sed -n 's/^define(_CLIENT_VERSION_MAJOR, \(.*\))$/\1/p' configure.ac).$(sed -n 's/^define(_CLIENT_VERSION_MINOR, \(.*\))$/\1/p' configure.ac).$(sed -n 's/^define(_CLIENT_VERSION_BUILD, \(.*\))$/\1/p' configure.ac)"
+      fi
+      craftctl set version="$version"
+    override-build: |
+      ./autogen.sh
+      ./configure \
+        --prefix=/usr \
+        --disable-tests \
+        --disable-bench \
+        --disable-dependency-tracking \
+        --enable-reduce-exports \
+        --with-gui=qt5 \
+        --with-daemon \
+        --with-utils \
+        BDB_LIBS="-L$CRAFT_STAGE/usr/lib -ldb_cxx-6.2" \
+        BDB_CFLAGS="-I$CRAFT_STAGE/usr/include"
+      make -j"$CRAFT_PARALLEL_BUILD_COUNT"
+      make install DESTDIR="$CRAFT_PART_INSTALL"
+      # Binaries are installed under /usr/bin; the app commands above expect
+      # bin/, which snapd resolves against $SNAP.
+      mkdir -p "$CRAFT_PART_INSTALL/bin"
+      for b in diminutivecoind diminutivecoin-cli diminutivecoin-tx diminutivecoin-qt; do
+        ln -sf ../usr/bin/"$b" "$CRAFT_PART_INSTALL/bin/$b"
+      done
+      # The build does not install the icons, so place them by hand for the
+      # Icon= entry in the desktop file.
+      for size in 16 32 64 128 256; do
+        d="$CRAFT_PART_INSTALL/usr/share/icons/hicolor/${size}x${size}/apps"
+        mkdir -p "$d"
+        cp share/pixmaps/bitcoin${size}.png "$d/diminutivecoin.png"
+      done
+
+  launcher:
+    plugin: dump
+    source: contrib/snap
+    organize:
+      diminutivecoin-qt.desktop: usr/share/applications/diminutivecoin-qt.desktop
+    prime:
+      - usr/share/applications/*

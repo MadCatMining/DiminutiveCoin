@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=Diminutivecoin
+GenericName=Diminutivecoin Wallet
+Comment=Send and receive Diminutivecoin and stake your balance
+Exec=diminutivecoin.qt %u
+Icon=diminutivecoin
+Terminal=false
+Categories=Office;Finance;
+Keywords=diminutivecoin;dimi;cryptocurrency;wallet;staking;
+StartupWMClass=Diminutivecoin-qt
+MimeType=x-scheme-handler/diminutivecoin;
